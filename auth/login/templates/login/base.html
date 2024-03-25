@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transcendance AUTH</title>
+</head>
+<body>
+<div>
+    {% for message in messages %}
+        <h3>{{ message }}</h3>
+    {% endfor %}
+</div>
+{% block content %}{% endblock %}
+</body>
+</html>
