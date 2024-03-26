@@ -21,4 +21,5 @@ from login import endpoint
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', endpoint.login),
+    path('register/', endpoint.register),
 ]

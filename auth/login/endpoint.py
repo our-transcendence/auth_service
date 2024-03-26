@@ -28,3 +28,13 @@ def login(request):
     return render(request,
                   'login/login.html',
                   {"string": string})
+
+def register(request):
+    if request.method == "POST":
+        string = f'POST register method call'
+        data = json.loads(request.body)
+    else:
+        string = 'GET register method call'
+    return render(request,
+                  'login/login.html',
+                  {"string": string})
