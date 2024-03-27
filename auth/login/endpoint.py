@@ -1,30 +1,33 @@
-from django.shortcuts import render
-from django.contrib import messages
+from django.http import response
+from django.views.decorators.csrf import csrf_exempt
+
 from login.models import User
 
 import json
 
 
+def return_user_cookie(user):
+    cookie_response = response.HttpResponse(status=200)
+    cookie_response.set_cookie("user", user.login, max_age=None)
+    return cookie_response
+
+
 # Create your views here.
+
+
+@csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 def login(request):
     if request.method == 'POST':
-        string = f'POST method call'
         data = json.loads(request.body)
         username = data["username"]
         password = data["password"]
         try:
-            loged = User.objects.get(login=username)
+            logged = User.objects.get(login=username)
         except User.DoesNotExist:
-            string = f'User {username} does not exist'
-            return render(request,
-                          'login/login.html',
-                          {"string": string})
-        if loged.password == password:
-            string = f'User {loged.login} authentified'
+            return response.JsonResponse({'error_type': f'User {username} does not exist'}, status=401)
+        if logged.password == password:
+            return return_user_cookie(logged)
         else:
-            string = f'Wrong password for user {loged.login}'
+            return response.JsonResponse({'error_type': "bad password"}, status=401)
     else:
-        string = f'GET method call'
-    return render(request,
-                  'login/login.html',
-                  {"string": string})
+        return response.JsonResponse({'error_type': 'This endpoint can only be reached using POST method'}, status=405)
