@@ -1,6 +1,7 @@
 from django.http import response
 from django.views.decorators.csrf import csrf_exempt
-
+from django.views.decorators.http import require_POST, require_GET
+from django.core import exceptions
 from login.models import User
 
 import json
@@ -16,19 +17,26 @@ def return_user_cookie(user):
 
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
+@require_POST
 def login(request):
-    if not request.method == 'POST':
-        return response.JsonResponse({'error_type': 'This endpoint can only be reached using POST method'}, status=405)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return response.JsonResponse({'error_type': "BAD Json Content"}, status=400)
 
-    data = json.loads(request.body)
-    # TODO check JSON Decode
+    expected_keys = {"username", "password"}
+    if set(data.keys()) != expected_keys:
+        return response.JsonResponse({'error_type': "BAD Json Content"}, status=400)
+
     username = data["username"]
     password = data["password"]
+
     try:
-        logged = User.objects.get(login=username)
-    except User.DoesNotExist:
+        user = User.objects.get(login=username)
+    except exceptions.ObjectDoesNotExist:
         return response.JsonResponse({'error_type': f'User {username} does not exist'}, status=401)
-    if logged.password == password:
-        return return_user_cookie(logged)
+
+    if user.password == password:
+        return return_user_cookie(user)
     else:
         return response.JsonResponse({'error_type': "bad password"}, status=401)
