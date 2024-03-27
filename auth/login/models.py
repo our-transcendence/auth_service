@@ -11,8 +11,9 @@ class User(models.Model):
     )
     displayName = models.CharField(
         max_length=25,
-        validators=[MinLengthValidator(5, "Must contains at least 5 char")]
+        validators=[MinLengthValidator(5, "Must contains at least 5 char")],
+        null=True
     )
-    pongElo = models.PositiveIntegerField()
-    gunFightElo = models.PositiveIntegerField()
-    picture = models.CharField(max_length=25)
+    pongElo = models.PositiveIntegerField(default=200)
+    gunFightElo = models.PositiveIntegerField(default=200)
+    picture = models.CharField(max_length=25, null=True)
