@@ -1,5 +1,8 @@
 asgiref==3.8.1
+cffi==1.16.0
+cryptography==42.0.5
 Django==5.0.3
+pycparser==2.21
 PyJWT==2.8.0
 sqlparse==0.4.4
 typing_extensions==4.10.0

@@ -2,7 +2,7 @@ from django.http import response
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 from django.forms.models import model_to_dict
-
+from django.conf import settings
 from django.core import exceptions
 from login.models import User
 
@@ -12,9 +12,8 @@ import jwt
 
 def return_user_cookie(user):
     user_dict = model_to_dict(user)
-    key = "secret"
-    payload = jwt.encode(user_dict, key)
-    #TODO: add this token to the valid list in the JWT service
+    priv = settings.PRIVATE_KEY
+    payload = jwt.encode(user_dict, priv, algorithm="RS256")
     cookie_response = response.HttpResponse(status=200)
     cookie_response.set_cookie("token", payload, max_age=None)
     return cookie_response
