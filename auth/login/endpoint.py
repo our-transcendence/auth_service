@@ -1,3 +1,5 @@
+from datetime import datetime, timedelta
+
 from django.http import response
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
@@ -13,6 +15,8 @@ import jwt
 def return_user_cookie(user):
     user_dict = model_to_dict(user)
     priv = settings.PRIVATE_KEY
+    expdate = datetime.now() + timedelta(minutes=10)
+    user_dict["exp"] = expdate
     payload = jwt.encode(user_dict, priv, algorithm="RS256")
     cookie_response = response.HttpResponse(status=200)
     cookie_response.set_cookie("token", payload, max_age=None)
@@ -28,7 +32,7 @@ def login(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.JsonResponse({'error_type': "BAD Json Content"}, status=400)
+        return response.HttpResponse(status=400, reason="Bad Json content")
 
     expected_keys = {"username", "password"}
     if set(data.keys()) != expected_keys:
