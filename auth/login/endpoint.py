@@ -35,7 +35,7 @@ def login(request):
 
     expected_keys = {"username", "password"}
     if set(data.keys()) != expected_keys:
-        return response.JsonResponse({'error_type': "BAD Json Content"}, status=400)
+        return response.HttpResponse(status=400, reason="Bad Json content")
 
     username = data["username"]
     password = data["password"]
@@ -43,13 +43,14 @@ def login(request):
     try:
         user = User.objects.get(login=username)
     except exceptions.ObjectDoesNotExist:
-        return response.JsonResponse({'error_type': f'User {username} does not exist'}, status=401)
+        return response.HttpResponse(status=401, reason="f'User {username} does not exist")
 
     if user.password == password:
         cookie_response = response.JsonResponse({'refresh_token': user.generate_refresh_token()}, status=200)
         return return_user_cookie(user, cookie_response)
     else:
-        return response.JsonResponse({'error_type': "bad password"}, status=401)
+        return response.HttpResponse(status=401, reason="Wrong password")
+
 
 
 
