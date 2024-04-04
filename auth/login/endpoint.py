@@ -53,10 +53,9 @@ def login(request):
 
 
 
-
 @csrf_exempt # TODO: DO NOT USE IN PRODUCTION
 @require_GET
-def refresh_token(request):
+def refresh_auth_token(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -72,6 +71,6 @@ def refresh_token(request):
         payload = jwt.decode(jwt=token, key=settings.PRIVATE_KEY, algorithms=["RS256"])
         user = User.objects.get(login=payload["user_id"])
     except (jwt.DecodeError, jwt.ExpiredSignatureError, exceptions.ObjectDoesNotExist):
-        return response.HttpResponse(status=400, reason="Invalid refresh Token")
+        return response.HttpResponse(status=443, reason="Invalid refresh Token")
 
     return return_user_cookie(user, response.HttpResponse(status=200))
