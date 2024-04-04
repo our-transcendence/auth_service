@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from django.http import response
 from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.http import require_POST, require_GET, require_PATCH, require_http_methods
 from django.forms.models import model_to_dict
 from django.conf import settings
 from django.core import exceptions
@@ -52,8 +52,7 @@ def login(request):
         return response.HttpResponse(status=401, reason="Wrong password")
 
 
-
-@csrf_exempt # TODO: DO NOT USE IN PRODUCTION
+@csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def refresh_auth_token(request):
     try:
@@ -70,7 +69,10 @@ def refresh_auth_token(request):
     try:
         payload = jwt.decode(jwt=token, key=settings.PRIVATE_KEY, algorithms=["RS256"])
         user = User.objects.get(login=payload["user_id"])
-    except (jwt.DecodeError, jwt.ExpiredSignatureError, exceptions.ObjectDoesNotExist):
+        id = payload["id"]
+    except (jwt.DecodeError, jwt.ExpiredSignatureError, exceptions.ObjectDoesNotExist, KeyError):
+        return response.HttpResponse(status=443, reason="Invalid refresh Token")
+    if id != user.jwt_emitted:
         return response.HttpResponse(status=443, reason="Invalid refresh Token")
 
     return return_user_cookie(user, response.HttpResponse(status=200))
