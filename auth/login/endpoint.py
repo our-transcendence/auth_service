@@ -24,7 +24,6 @@ def return_user_cookie(user, cookie_response):
 
 # Create your views here.
 
-
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def login_endpoint(request):
@@ -73,8 +72,8 @@ def register_endpoint(request):
     new_user = User(login=login, password=password, displayName=display_name)
     new_user.save()
 
-    return response.HttpResponse(status=400, reason="User successfully created")
-
+    cookie_response = response.JsonResponse({'refresh_token': new_user.generate_refresh_token()}, status=200)
+    return return_user_cookie(new_user, cookie_response)
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
