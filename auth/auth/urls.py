@@ -20,6 +20,6 @@ from login import endpoint
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', endpoint.login),
-    path('register/', endpoint.register),
+    path('login/', endpoint.login_endpoint),
+    path('register/', endpoint.register_endpoint),
 ]

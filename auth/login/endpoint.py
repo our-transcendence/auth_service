@@ -27,21 +27,21 @@ def return_user_cookie(user, cookie_response):
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
-def login(request):
+def login_endpoint(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return response.HttpResponse(status=400, reason="Bad Json content: JSONDecodeError")
 
-    expected_keys = {"username", "password"}
+    expected_keys = {"login", "password"}
     if set(data.keys()) != expected_keys:
         return response.HttpResponse(status=400, reason="Bad Json content: Bad Keys")
 
-    username = data["username"]
+    login = data["login"]
     password = data["password"]
 
     try:
-        user = User.objects.get(login=username)
+        user = User.objects.get(login=login)
     except exceptions.ObjectDoesNotExist:
         return response.HttpResponse(status=401, reason="f'User {username} does not exist")
 
@@ -53,23 +53,24 @@ def login(request):
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
-def register(request):
+def register_endpoint(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
         return response.HttpResponse(status=400, reason="Bad Json content: Decode Error")
 
-    expected_keys = {"username", "password"}
+    expected_keys = {"login", "password", "display_name"}
     if set(data.keys()) != expected_keys:
         return response.HttpResponse(status=400, reason="Bad Json content: Bad Keys")
 
-    username = data["username"]
+    login = data["login"]
+    display_name = data["display_name"]
     password = data["password"]
 
-    if User.objects.filter(login=username).exists():
-        return response.HttpResponse(status=401, reason="User with this username already exists")
+    if User.objects.filter(login=login).exists():
+        return response.HttpResponse(status=401, reason="User with this login already exists")
 
-    new_user = User(login=username, password=password)
+    new_user = User(login=login, password=password, displayName=display_name)
     new_user.save()
 
     return response.HttpResponse(status=400, reason="User successfully created")
