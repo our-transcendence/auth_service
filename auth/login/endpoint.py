@@ -52,7 +52,7 @@ def login_endpoint(request):
         return response.HttpResponse(status=401, reason="Wrong password")
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
-@require_GET
+@require_POST
 def register_endpoint(request):
     try:
         data = json.loads(request.body)
@@ -77,7 +77,7 @@ def register_endpoint(request):
 
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
-@require_POST
+@require_GET
 def refresh_auth_token(request):
     try:
         data = json.loads(request.body)
