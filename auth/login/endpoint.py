@@ -77,7 +77,7 @@ def register_endpoint(request):
 
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
-@require_GET
+@require_POST
 def refresh_auth_token(request):
     try:
         data = json.loads(request.body)
