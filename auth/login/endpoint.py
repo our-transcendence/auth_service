@@ -31,11 +31,11 @@ def login(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.HttpResponse(status=400, reason="Bad Json content")
+        return response.HttpResponse(status=400, reason="Bad Json content: JSONDecodeError")
 
     expected_keys = {"username", "password"}
     if set(data.keys()) != expected_keys:
-        return response.HttpResponse(status=400, reason="Bad Json content")
+        return response.HttpResponse(status=400, reason="Bad Json content: Bad Keys")
 
     username = data["username"]
     password = data["password"]
@@ -50,24 +50,42 @@ def login(request):
         return return_user_cookie(user, cookie_response)
     else:
         return response.HttpResponse(status=401, reason="Wrong password")
+
+@csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
+@require_GET
 def register(request):
-    if request.method == "POST":
-        string = f'POST register method call'
+    try:
         data = json.loads(request.body)
-    else:
-        string = 'GET register method call'
-    return response.HttpResponse(status=401, reason=string)
+    except json.JSONDecodeError:
+        return response.HttpResponse(status=400, reason="Bad Json content: Decode Error")
+
+    expected_keys = {"username", "password"}
+    if set(data.keys()) != expected_keys:
+        return response.HttpResponse(status=400, reason="Bad Json content: Bad Keys")
+
+    username = data["username"]
+    password = data["password"]
+
+    if User.objects.filter(login=username).exists():
+        return response.HttpResponse(status=401, reason="User with this username already exists")
+
+    new_user = User(login=username, password=password)
+    new_user.save()
+
+    return response.HttpResponse(status=400, reason="User successfully created")
+
+
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def refresh_auth_token(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.HttpResponse(status=400, reason="Bad Json content")
+        return response.HttpResponse(status=400, reason="Bad Json content: Decode Error")
 
     expected_key = {"refresh_token"}
     if set(data.keys()) != expected_key:
-        return response.HttpResponse(status=400, reason="Expected credential not foud")
+        return response.HttpResponse(status=400, reason="Bad Json content: Bad keys")
 
     token = data["refresh_token"]
 
