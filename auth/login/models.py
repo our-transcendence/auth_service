@@ -22,12 +22,14 @@ class User(models.Model):
     pongElo = models.PositiveIntegerField(default=200)
     gunFightElo = models.PositiveIntegerField(default=200)
     picture = models.CharField(max_length=25, null=True)
+    jwt_emitted = models.IntegerField(default=0)
 
     def generate_refresh_token(self):
         priv = settings.PRIVATE_KEY
         expdate = datetime.now() + timedelta(days=7)
         payload = {
             "sub": self.login,
+            "id": self.jwt_emitted,
             "exp": expdate
         }
         return jwt.encode(payload, priv, "RS256")
