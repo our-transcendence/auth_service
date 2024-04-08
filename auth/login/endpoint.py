@@ -30,11 +30,11 @@ def login_endpoint(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.HttpResponse(status=400, reason="Bad Json content: JSONDecodeError")
+        return response.HttpResponse(status=400, reason="JSON Decode Error")
 
     expected_keys = {"login", "password"}
     if set(data.keys()) != expected_keys:
-        return response.HttpResponse(status=400, reason="Bad Json content: Bad Keys")
+        return response.HttpResponse(status=400, reason="Bad Keys")
 
     login = data["login"]
     password = data["password"]
@@ -56,11 +56,11 @@ def register_endpoint(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.HttpResponse(status=400, reason="Bad Json content: Decode Error")
+        return response.HttpResponse(status=400, reason="JSON Decode Error")
 
     expected_keys = {"login", "password", "display_name"}
     if set(data.keys()) != expected_keys:
-        return response.HttpResponse(status=400, reason="Bad Json content: Bad Keys")
+        return response.HttpResponse(status=400, reason="Bad Keys")
 
     login = data["login"]
     display_name = data["display_name"]
@@ -72,8 +72,7 @@ def register_endpoint(request):
     new_user = User(login=login, password=password, displayName=display_name)
     new_user.save()
 
-    cookie_response = response.JsonResponse({'refresh_token': new_user.generate_refresh_token()}, status=200)
-    return return_user_cookie(new_user, cookie_response)
+    return response.JsonResponse({'refresh_token': new_user.generate_refresh_token()}, status=200)
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
@@ -81,11 +80,11 @@ def refresh_auth_token(request):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.HttpResponse(status=400, reason="Bad Json content: Decode Error")
+        return response.HttpResponse(status=400, reason="JSON Decode Error")
 
     expected_key = {"refresh_token"}
     if set(data.keys()) != expected_key:
-        return response.HttpResponse(status=400, reason="Bad Json content: Bad keys")
+        return response.HttpResponse(status=400, reason="Bad keys")
 
     token = data["refresh_token"]
 
