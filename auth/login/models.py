@@ -9,7 +9,8 @@ import jwt
 
 # Create your models here.
 class User(models.Model):
-    login = models.CharField(max_length=15, primary_key=True)
+    id = models.BigAutoField(primary_key=True)
+    login = models.CharField(max_length=15, unique=True)
     password = models.CharField(
         max_length=25,
         validators=[MinLengthValidator(5, "Must contains at least 5 char")]
