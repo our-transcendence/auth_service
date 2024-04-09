@@ -8,17 +8,21 @@ from django.conf import settings
 from django.core import exceptions
 from login.models import User
 
+import os
+
 import json
 import jwt
+
+duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 
 def return_user_cookie(user, cookie_response):
     user_dict = model_to_dict(user)
     priv = settings.PRIVATE_KEY
-    expdate = datetime.now() + timedelta(minutes=10)
+    expdate = datetime.now() + timedelta(minutes=duration)
     user_dict["exp"] = expdate
     payload = jwt.encode(user_dict, priv, algorithm="RS256")
-    cookie_response.set_cookie("token", payload, max_age=None)
+    cookie_response.set_cookie("auth_token", payload, max_age=None)
     return cookie_response
 
 
