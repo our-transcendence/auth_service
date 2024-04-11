@@ -2,6 +2,9 @@ asgiref==3.8.1
 cffi==1.16.0
 cryptography==42.0.5
 Django==5.0.4
+gunicorn==21.2.0
+packaging==24.0
+psycopg==3.1.18
 pycparser==2.21
 PyJWT==2.8.0
 sqlparse==0.4.4

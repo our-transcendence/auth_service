@@ -46,7 +46,7 @@ def login_endpoint(request):
     try:
         user = User.objects.get(login=login)
     except exceptions.ObjectDoesNotExist:
-        return response.HttpResponse(status=401, reason="f'User {username} does not exist")
+        return response.HttpResponse(status=401, reason=f'User \"{login}\" does not exist')
 
     if user.password == password:
         cookie_response = response.JsonResponse({'refresh_token': user.generate_refresh_token()}, status=200)
