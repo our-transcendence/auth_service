@@ -14,6 +14,8 @@ from pathlib import Path
 
 from login.startup import keygen
 
+from ourJWT import OUR_class
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
