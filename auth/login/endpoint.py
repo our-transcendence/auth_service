@@ -5,13 +5,14 @@ from django.http import response, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.forms.models import model_to_dict
-from django.conf import settings
+from auth import settings
 from django.core import exceptions
 from login.models import User
 
 import os
 
 import json
+
 from ourJWT import decorators
 
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
@@ -83,7 +84,7 @@ def register_endpoint(request):
 
 
 #TODO: Check if auth token is in request, refuse if not the case
-@decorators.auth_required()
+@decorators.auth_required(settings.decoder)
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def refresh_auth_token(request: HttpRequest):
@@ -103,7 +104,8 @@ def refresh_auth_token(request: HttpRequest):
     token = data["refresh_token"]
 
     try:
-        payload = jwt.decode(jwt=token, key=settings.PRIVATE_KEY, algorithms=["RS256"])
+        payload = settings.decoder.decode(token)
+        # payload = jwt.decode(jwt=token, key=settings.PRIVATE_KEY, algorithms=["RS256"])
         user = User.objects.get(login=payload["user_id"])
         id = payload["id"]
     except (jwt.DecodeError, jwt.ExpiredSignatureError, exceptions.ObjectDoesNotExist, KeyError):
@@ -112,3 +114,4 @@ def refresh_auth_token(request: HttpRequest):
         return response.HttpResponseBadRequest(reason="Invalid refresh Token")
 
     return return_user_cookie(user, response.HttpResponse(status=200))
+

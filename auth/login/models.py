@@ -33,4 +33,5 @@ class User(models.Model):
             "id": self.jwt_emitted,
             "exp": expdate
         }
-        return jwt.encode(payload, priv, "RS256")
+        return settings
+        # return jwt.encode(payload, priv, "RS256")
