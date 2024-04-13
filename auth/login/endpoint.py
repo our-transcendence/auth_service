@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 
-import ourJWT
 from django.http import response, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.forms.models import model_to_dict
-from auth import settings
+
+from . import crypto
 from django.core import exceptions
 from login.models import User
 
@@ -20,10 +20,9 @@ duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 def return_user_cookie(user, cookie_response):
     user_dict = model_to_dict(user)
-    priv = settings.PRIVATE_KEY
     expdate = datetime.now() + timedelta(minutes=duration)
     user_dict["exp"] = expdate
-    payload = ourJWT.jwt.encode(user_dict, priv, algorithm="RS256")
+    payload = crypto.encoder.encode(user_dict, "auth")
     cookie_response.set_cookie("auth_token", payload, max_age=None, Http_only=True)
     return cookie_response
 
@@ -84,7 +83,7 @@ def register_endpoint(request):
 
 
 #TODO: Check if auth token is in request, refuse if not the case
-@decorators.auth_required(settings.decoder)
+@decorators.auth_required(crypto.decoder)
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def refresh_auth_token(request: HttpRequest):
@@ -104,14 +103,13 @@ def refresh_auth_token(request: HttpRequest):
     token = data["refresh_token"]
 
     try:
-        payload = settings.decoder.decode(token)
+        payload = crypto.decoder.decode(token)
         # payload = jwt.decode(jwt=token, key=settings.PRIVATE_KEY, algorithms=["RS256"])
         user = User.objects.get(login=payload["user_id"])
         id = payload["id"]
-    except (jwt.DecodeError, jwt.ExpiredSignatureError, exceptions.ObjectDoesNotExist, KeyError):
-        return response.HttpResponseBadRequest(reason="Invalid refresh Token")
+    # except (jwt.DecodeError, jwt.ExpiredSignatureError, exceptions.ObjectDoesNotExist, KeyError):
+    #     return response.HttpResponseBadRequest(reason="Invalid refresh Token")
     if id != user.jwt_emitted:
         return response.HttpResponseBadRequest(reason="Invalid refresh Token")
 
     return return_user_cookie(user, response.HttpResponse(status=200))
-

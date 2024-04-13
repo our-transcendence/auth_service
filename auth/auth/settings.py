@@ -12,8 +12,6 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
-from login.startup import keygen
-
 from ourJWT import OUR_class, OUR_exception
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -139,31 +137,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-PRIVATE_KEY = keygen()
 
 if os.getenv("USER") == "gd-harco":
     print("Using debug local datase")
     DATABASES['default'] = DATABASES["debug"]
 else:
     print(f'Using default distant database')
-
-PUBKEY = """-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEA+UsBSBGi71VYLGUL5nCz
-o7NK/VveP2OCqt1SsYrls2OmzyQMs5sjNeVAY3XMf15h5OD5ylCYD8eTILy4PXyD
-OShIJyAM6+sfMJh9StKkvkUVRcq+6weg8ueb4obZYddC2YkYAbncjeF2nGQEbG2y
-ecZhAXgaPfUZSQqjvCu/haSMo8C5S8+H66jwBV8pv4ewhtdlOV4NM1go7E0BWtgK
-6iN8x1PChBsninsfEnyxXME/Ubush7sZ+IKyScXc+87niaR/omlHeL6m/MzsS/qL
-tUQzm0UwPhHOBcILO9eGW/DY0W1Hs/8fqSQ5gvcksmS6rShqBb2IxOq2S0eDgCPM
-+QIDAQAB
------END PUBLIC KEY-----"""
-
-
-encoder: OUR_class.Encoder
-decoder: OUR_class.Decoder
-
-try:
-    encoder = OUR_class.Encoder(PRIVATE_KEY)
-    decoder = OUR_class.Decoder(PUBKEY)
-except OUR_exception.NoKey:
-    print("NO KEY ERROR")
-    exit
