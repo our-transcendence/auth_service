@@ -31,31 +31,30 @@ def return_user_cookie(user, cookie_response):
 
 
 #TODO: ne pas envoyer le refresh token en body, mais en cookie http only
+#TODO: get info in Authorization request header https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
-def login_endpoint(request):
-    try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return response.HttpResponse(status=400, reason="JSON Decode Error")
-
-    expected_keys = {"login", "password"}
-    if set(data.keys()) != expected_keys:
-        return response.HttpResponse(status=400, reason="Bad Keys")
-
-    login = data["login"]
-    password = data["password"]
+def login_endpoint(request: HttpRequest):
+    auth: str = request.headers["Authorization:"]
+    if auth is None:
+        return response.HttpResponseBadRequest(reason="No Authorization header found in request")
+    auth_type: str = auth.split(" ")[0]
+    if (auth_type) != "Basic":
+        return response.HttpResponseBadRequest(reason="invalid Authorization type")
+    auth_data: str = auth.split(" ")[1]
+    login = auth_data.split("/")[0]
+    password = auth_data.split("/")[1]
 
     try:
-        user = User.objects.get(login=login)
+        user: User = User.objects.get(login=login)
     except exceptions.ObjectDoesNotExist:
-        return response.HttpResponse(status=401, reason=f'User \"{login}\" does not exist')
+        return response.HttpResponse(status=401, reason='Invalid credential')
 
     if user.password == password:
         cookie_response = response.JsonResponse({'refresh_token': user.generate_refresh_token()}, status=200)
         return return_user_cookie(user, cookie_response)
     else:
-        return response.HttpResponse(status=401, reason="Wrong password")
+        return response.HttpResponse(status=401, reason='Invalid credential')
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_POST
@@ -86,10 +85,7 @@ def register_endpoint(request):
 @decorators.auth_required(crypto.decoder)
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
-def refresh_auth_token(request: HttpRequest):
-    # auth: str = request.headers["Authorization"]
-    # auth_type = auth.split(" ")[0]
-    # auth_cred = auth.split(" ")[1]
+def refresh_auth_token(request: HttpRequest, *args):
     #
     try:
         data = json.loads(request.body)
