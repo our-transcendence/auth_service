@@ -4,8 +4,7 @@ from django.db import models
 from django.core.validators import MinLengthValidator
 from django.conf import settings
 
-import jwt
-
+from crypto import encoder
 
 # Create your models here.
 class User(models.Model):
@@ -26,12 +25,10 @@ class User(models.Model):
     jwt_emitted = models.IntegerField(default=0)
 
     def generate_refresh_token(self):
-        priv = settings.PRIVATE_KEY
         expdate = datetime.now() + timedelta(days=7)
         payload = {
             "sub": self.login,
             "id": self.jwt_emitted,
             "exp": expdate
         }
-        return settings
-        # return jwt.encode(payload, priv, "RS256")
+        return encoder.encode(payload, "refresh")

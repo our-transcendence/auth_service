@@ -18,19 +18,19 @@ from ourJWT import decorators
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 
-def return_user_cookie(user, cookie_response):
+def return_user_cookie(user: User, full_response: response.HttpResponse):
     user_dict = model_to_dict(user)
     expdate = datetime.now() + timedelta(minutes=duration)
     user_dict["exp"] = expdate
     payload = crypto.encoder.encode(user_dict, "auth")
-    cookie_response.set_cookie("auth_token", payload, max_age=None, Http_only=True)
-    return cookie_response
+    full_response.set_cookie("auth_token", payload, max_age=None, secure=True, Http_only=True)
+    return full_response
 
 
 # Create your views here.
 
 
-#TODO: ne pas envoyer le refresh token en body, mais en cookie http only
+#TODO: ne pas envoyer le refresh token en body, mais en cookie http only : https://dev.to/bcerati/les-cookies-httponly-une-securite-pour-vos-tokens-2p8n
 #TODO: get info in Authorization request header https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
@@ -51,8 +51,9 @@ def login_endpoint(request: HttpRequest):
         return response.HttpResponse(status=401, reason='Invalid credential')
 
     if user.password == password:
-        cookie_response = response.JsonResponse({'refresh_token': user.generate_refresh_token()}, status=200)
-        return return_user_cookie(user, cookie_response)
+        full_response =  response.HttpResponse()
+        full_response.set_cookie('refresh_token', user.generate_refresh_token(), secure=True, httponly=True)
+        return return_user_cookie(user, full_response)
     else:
         return response.HttpResponse(status=401, reason='Invalid credential')
 
