@@ -56,16 +56,14 @@ def login_endpoint(request: HttpRequest):
         return response.HttpResponse(status=401, reason='Invalid credential')
 
     if user.password == password:
-        full_response = response.HttpResponse()
-        full_response.set_cookie(key='refresh_token', value=user.generate_refresh_token(), secure=True, httponly=True)
-        return return_user_cookie(user, full_response)
+        return return_refresh_token(user=user)
     else:
         return response.HttpResponse(status=401, reason='Invalid credential')
 
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_POST
-def register_endpoint(request):
+def register_endpoint(request: HttpRequest):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -85,10 +83,8 @@ def register_endpoint(request):
     new_user = User(login=login, password=password, displayName=display_name)
     new_user.save()
 
-    return response.JsonResponse({'refresh_token': new_user.generate_refresh_token()}, status=200)
+    return return_refresh_token(new_user)
 
-
-#TODO: Check if auth token is in request, refuse if not the case
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def refresh_auth_token(request: HttpRequest, *args):
