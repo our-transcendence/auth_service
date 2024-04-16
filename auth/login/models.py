@@ -4,7 +4,7 @@ from django.db import models
 from django.core.validators import MinLengthValidator
 from django.conf import settings
 
-from crypto import encoder
+from .crypto import encoder
 
 # Create your models here.
 class User(models.Model):
@@ -27,8 +27,8 @@ class User(models.Model):
     def generate_refresh_token(self):
         expdate = datetime.now() + timedelta(days=7)
         payload = {
-            "sub": self.login,
-            "id": self.jwt_emitted,
+            "pk": self.pk,
+            "jti": self.jwt_emitted,
             "exp": expdate
         }
         return encoder.encode(payload, "refresh")

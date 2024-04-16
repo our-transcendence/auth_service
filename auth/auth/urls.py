@@ -22,4 +22,6 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('login/', endpoint.login_endpoint),
     path('register/', endpoint.register_endpoint),
+    path('refresh/', endpoint.refresh_auth_token),
+    path('test/', endpoint.test_decorator)
 ]
