@@ -20,7 +20,7 @@ from ourJWT import decorators
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 
-def return_user_cookie(user: User, full_response: response.HttpResponse):
+def return_auth_cookie(user: User, full_response: response.HttpResponse):
     user_dict = model_to_dict(user)
     expdate = datetime.now() + timedelta(seconds=5)
     user_dict["exp"] = expdate
@@ -28,6 +28,10 @@ def return_user_cookie(user: User, full_response: response.HttpResponse):
     full_response.set_cookie(key="auth_token", value=payload, secure=True, httponly=True)
     return full_response
 
+def return_refresh_token(user: User):
+    full_response = response.HttpResponse()
+    full_response.set_cookie(key='refresh_token', value=user.generate_refresh_token(), secure=True, httponly=True)
+    return return_auth_cookie(user, full_response)
 
 # Create your views here.
 
@@ -117,7 +121,7 @@ def refresh_auth_token(request: HttpRequest, *args):
     if id != user.jwt_emitted:
         return response.HttpResponseBadRequest(reason="token error")
 
-    return return_user_cookie(user, response.HttpResponse(status=200))
+    return return_auth_cookie(user, response.HttpResponse(status=200))
 
 
 @ourJWT.Decoder.check_auth()
