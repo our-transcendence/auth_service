@@ -11,27 +11,28 @@ from . import crypto
 from django.core import exceptions
 from login.models import User
 
+import base64
 import os
 
 import json
-
-from ourJWT import decorators
 
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 
 def return_auth_cookie(user: User, full_response: response.HttpResponse):
     user_dict = model_to_dict(user)
-    expdate = datetime.now() + timedelta(seconds=5)
+    expdate = datetime.now() + timedelta(minutes=duration)
     user_dict["exp"] = expdate
     payload = crypto.encoder.encode(user_dict, "auth")
     full_response.set_cookie(key="auth_token", value=payload, secure=True, httponly=True)
     return full_response
 
+
 def return_refresh_token(user: User):
     full_response = response.HttpResponse()
     full_response.set_cookie(key='refresh_token', value=user.generate_refresh_token(), secure=True, httponly=True)
     return return_auth_cookie(user, full_response)
+
 
 # Create your views here.
 
@@ -46,9 +47,10 @@ def login_endpoint(request: HttpRequest):
     auth_type: str = auth.split(" ")[0]
     if auth_type != "Basic":
         return response.HttpResponseBadRequest(reason="invalid Authorization type")
-    auth_data: str = auth.split(" ")[1]
-    login = auth_data.split("/")[0]
-    password = auth_data.split("/")[1]
+    auth_data_encoded: str = auth.split(" ")[1]
+    auth_data = base64.b64decode(auth_data_encoded).decode()
+    login = auth_data.split(":")[0]
+    password = auth_data.split(":", 1)[1]
 
     try:
         user: User = User.objects.get(login=login)
@@ -84,6 +86,7 @@ def register_endpoint(request: HttpRequest):
     new_user.save()
 
     return return_refresh_token(new_user)
+
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
@@ -125,6 +128,7 @@ def test_decorator(request, **kwargs):
     auth = kwargs["token"]
     print(auth)
     return response.HttpResponse()
+
 
 @require_GET
 def pubkey_retrival(request):
