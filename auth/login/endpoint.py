@@ -125,3 +125,7 @@ def test_decorator(request, **kwargs):
     auth = kwargs["token"]
     print(auth)
     return response.HttpResponse()
+
+@require_GET
+def pubkey_retrival(request):
+    return response.HttpResponse(crypto.PUBKEY)
