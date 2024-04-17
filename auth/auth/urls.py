@@ -23,5 +23,6 @@ urlpatterns = [
     path('login/', endpoint.login_endpoint),
     path('register/', endpoint.register_endpoint),
     path('refresh/', endpoint.refresh_auth_token),
-    path('test/', endpoint.test_decorator)
+    path('test/', endpoint.test_decorator),
+    path('public_key/', endpoint.pubkey_retrival)
 ]
