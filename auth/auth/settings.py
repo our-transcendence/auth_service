@@ -12,7 +12,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
-from login.startup import keygen
+from ourJWT import OUR_class, OUR_exception
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -28,7 +28,8 @@ SECRET_KEY = 'django-insecure-bha_z48$lrtojju%5*y5y399k@f%c5!dnu80pbm7u)ccg$l_4y
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '82.64.223.220'
+    '82.64.223.220',
+    '127.0.0.1'
 ]
 
 
@@ -136,7 +137,6 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-PRIVATE_KEY = keygen()
 
 if os.getenv("USER") == "gd-harco":
     print("Using debug local datase")
