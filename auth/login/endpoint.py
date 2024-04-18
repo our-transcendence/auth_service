@@ -1,6 +1,8 @@
 from datetime import datetime, timedelta
 
 import ourJWT.OUR_exception
+from django.db import OperationalError, IntegrityError, DataError
+from django.core.exceptions import ValidationError
 from django.http import response, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
@@ -24,13 +26,20 @@ def return_auth_cookie(user: User, full_response: response.HttpResponse):
     expdate = datetime.now() + timedelta(minutes=duration)
     user_dict["exp"] = expdate
     payload = crypto.encoder.encode(user_dict, "auth")
-    full_response.set_cookie(key="auth_token", value=payload, secure=True, httponly=True)
+    full_response.set_cookie(key="auth_token",
+                             value=payload,
+                             secure=True,
+                             httponly=True)
     return full_response
 
 
 def return_refresh_token(user: User):
     full_response = response.HttpResponse()
-    full_response.set_cookie(key='refresh_token', value=user.generate_refresh_token(), secure=True, httponly=True)
+    full_response.set_cookie(key='refresh_token',
+                             value=user.generate_refresh_token(),
+                             secure=True,
+                             httponly=True,
+                             samesite="Strict")
     return return_auth_cookie(user, full_response)
 
 
@@ -69,11 +78,11 @@ def register_endpoint(request: HttpRequest):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.HttpResponse(status=400, reason="JSON Decode Error")
+        return response.HttpResponseBadRequest(reason="JSON Decode Error")
 
     expected_keys = {"login", "password", "display_name"}
     if set(data.keys()) != expected_keys:
-        return response.HttpResponse(status=400, reason="Bad Keys")
+        return response.HttpResponseBadRequest(reason="Bad Keys")
 
     login = data["login"]
     display_name = data["display_name"]
@@ -82,8 +91,16 @@ def register_endpoint(request: HttpRequest):
     if User.objects.filter(login=login).exists():
         return response.HttpResponse(status=401, reason="User with this login already exists")
 
-    new_user = User(login=login, password=password, displayName=display_name)
-    new_user.save()
+    try:
+        new_user = User(login=login, password=password, displayName=display_name)
+        new_user.clean_fields()
+        new_user.save()
+    except (IntegrityError, OperationalError):
+        print("DATABASE FAILURE")
+        return response.HttpResponse(status=500, reason="Database Failure")
+    except (ValidationError, DataError) as e:
+        print(e)
+        return response.HttpResponseBadRequest(reason="Invalid credential")
 
     return return_refresh_token(new_user)
 

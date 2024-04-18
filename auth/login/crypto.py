@@ -39,4 +39,4 @@ try:
     print(f"created both encoder and decoder object")
 except OUR_exception.NoKey:
     print("NO KEY ERROR")
-    exit
+    exit()
