@@ -9,8 +9,6 @@ def keygen():
         public_exponent=65537,
         key_size=2048
     )
-    print(f"Generated private key : {private_key}")
-    public_key = private_key.public_key
     private_key_bytes = private_key.private_bytes(
         encoding=serialization.Encoding.PEM,
         format=serialization.PrivateFormat.PKCS8,
@@ -22,21 +20,19 @@ def keygen():
         encoding=serialization.Encoding.PEM,
         format=serialization.PublicFormat.SubjectPublicKeyInfo
     )
-    with open('public_key.pem', 'wb') as f:
-        f.write(pem)
-    return private_key_bytes.decode()
 
-PRIVKEY = keygen()
+    return private_key_bytes.decode(), pem
 
-with open('public_key.pem', 'rb') as f:
-    PUBKEY = f.read()
+
+PRIVKEY, PUBKEY = keygen()
+
 
 encoder: OUR_class.Encoder
 OUR_class.Decoder.pub_key = PUBKEY
 
 try:
     encoder = OUR_class.Encoder(PRIVKEY)
-    print(f"created both encoder and decoder object")
+    print("created both encoder and decoder object")
 except OUR_exception.NoKey:
     print("NO KEY ERROR")
     exit()
