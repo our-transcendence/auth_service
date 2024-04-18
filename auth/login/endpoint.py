@@ -133,8 +133,8 @@ def refresh_auth_token(request: HttpRequest, *args):
     if user.login != auth_login:
         return response.HttpResponseForbidden("token error")
 
-    id = refresh["jti"]
-    if id != user.jwt_emitted:
+    jwt_id = refresh["jti"]
+    if jwt_id != user.jwt_emitted:
         return response.HttpResponseBadRequest(reason="token error")
 
     return return_auth_cookie(user, response.HttpResponse(status=200))
@@ -148,5 +148,5 @@ def test_decorator(request, **kwargs):
 
 
 @require_GET
-def pubkey_retrival(request):
+def pubkey_retrival():
     return response.HttpResponse(crypto.PUBKEY)
