@@ -32,6 +32,11 @@ ALLOWED_HOSTS = [
     '127.0.0.1'
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    "http://localhost"
+]
+
+CORS_ALLOW_ALL_ORIGINS = DEBUG
 
 # Application definition
 
@@ -42,13 +47,15 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'login'
+    'login',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
@@ -80,16 +87,12 @@ WSGI_APPLICATION = 'auth.wsgi.application'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    "debug": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": "mydatabase",
-    },
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.environ.get("POSTGRES_DB"),
-        'HOST': "postgres",
-        "USER": os.environ.get("POSTGRES_USER"),
-        "PASSWORD": os.environ.get("POSTGRES_PASSWORD"),
+        'NAME': os.environ.get("POSTGRES_DB", "DB"),
+        'HOST': "localhost",
+        "USER": os.environ.get("POSTGRES_USER", "USER"),
+        "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "PASSWORD"),
         "PORT": "5432",
     }
 }
@@ -136,10 +139,3 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-
-if os.getenv("USER") == "gd-harco":
-    print("Using debug local datase")
-    DATABASES['default'] = DATABASES["debug"]
-else:
-    print(f'Using default distant database')
