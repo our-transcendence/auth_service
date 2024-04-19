@@ -1,18 +1,19 @@
 from datetime import datetime, timedelta
 
-import ourJWT.OUR_exception
 from django.db import OperationalError, IntegrityError, DataError
-from django.core.exceptions import ValidationError
 from django.http import response, HttpRequest
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404
+from django.core import exceptions
+from django.contrib.auth import hashers
+
+import ourJWT.OUR_exception
 
 from . import crypto
-from django.core import exceptions
-from login.models import User
 
+from login.models import User
 import base64
 import os
 
@@ -66,7 +67,8 @@ def login_endpoint(request: HttpRequest):
     except exceptions.ObjectDoesNotExist:
         return response.HttpResponse(status=401, reason='Invalid credential')
 
-    if user.password == password:
+    if hashers.check_password(password, user.password):
+        print(f"{password}\n{user.password}")
         return return_refresh_token(user=user)
     else:
         return response.HttpResponse(status=401, reason='Invalid credential')
@@ -88,6 +90,9 @@ def register_endpoint(request: HttpRequest):
     display_name = data["display_name"]
     password = data["password"]
 
+    if password.__len__() < 5:
+        return response.HttpResponseBadRequest(reason="Invalid credential")
+
     if User.objects.filter(login=login).exists():
         return response.HttpResponse(status=401, reason="User with this login already exists")
 
@@ -98,10 +103,11 @@ def register_endpoint(request: HttpRequest):
     except (IntegrityError, OperationalError):
         print("DATABASE FAILURE")
         return response.HttpResponse(status=500, reason="Database Failure")
-    except (ValidationError, DataError) as e:
+    except (exceptions.ValidationError, DataError) as e:
         print(e)
         return response.HttpResponseBadRequest(reason="Invalid credential")
-
+    new_user.password = hashers.make_password(password)
+    new_user.save()
     return return_refresh_token(new_user)
 
 
