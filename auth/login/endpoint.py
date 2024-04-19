@@ -24,13 +24,17 @@ def return_auth_cookie(user: User, full_response: response.HttpResponse):
     expdate = datetime.now() + timedelta(minutes=duration)
     user_dict["exp"] = expdate
     payload = crypto.encoder.encode(user_dict, "auth")
-    full_response.set_cookie(key="auth_token", value=payload, secure=True, httponly=True)
+    full_response.set_cookie(key="auth_token",
+                             value=payload,
+                             httponly=True)
     return full_response
 
 
 def return_refresh_token(user: User):
     full_response = response.HttpResponse()
-    full_response.set_cookie(key='refresh_token', value=user.generate_refresh_token(), secure=True, httponly=True)
+    full_response.set_cookie(key='refresh_token',
+                             value=user.generate_refresh_token(),
+                             httponly=True)
     return return_auth_cookie(user, full_response)
 
 
