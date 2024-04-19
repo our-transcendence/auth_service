@@ -1,7 +1,8 @@
+import binascii
 from datetime import datetime, timedelta
 
 from django.db import OperationalError, IntegrityError, DataError
-from django.http import response, HttpRequest
+from django.http import response, HttpRequest, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.forms.models import model_to_dict
@@ -54,14 +55,19 @@ def login_endpoint(request: HttpRequest):
     auth: str = request.headers.get("Authorization", None)
     if auth is None:
         return response.HttpResponseBadRequest(reason="No Authorization header found in request")
-    auth_type: str = auth.split(" ")[0]
+    auth_type: str = auth.split(" ", 1)[0]
     if auth_type != "Basic":
         return response.HttpResponseBadRequest(reason="invalid Authorization type")
     auth_data_encoded: str = auth.split(" ")[1]
-    auth_data = base64.b64decode(auth_data_encoded).decode()
+    try:
+        auth_data = base64.b64decode(auth_data_encoded).decode()
+    except binascii.Error:
+        return response.HttpResponseBadRequest(reason="invalid encoding")
     login = auth_data.split(":")[0]
-    password = auth_data.split(":", 1)[1]
-
+    try:
+        password = auth_data.split(":", 1)[1]
+    except IndexError:
+        return response.HttpResponse(status=401, reason='Invalid credential')
     try:
         user: User = User.objects.get(login=login)
     except exceptions.ObjectDoesNotExist:
@@ -100,8 +106,8 @@ def register_endpoint(request: HttpRequest):
         new_user = User(login=login, password=password, displayName=display_name)
         new_user.clean_fields()
         new_user.save()
-    except (IntegrityError, OperationalError):
-        print("DATABASE FAILURE")
+    except (IntegrityError, OperationalError) as e:
+        print(f"DATABASE FAILURE {e}")
         return response.HttpResponse(status=500, reason="Database Failure")
     except (exceptions.ValidationError, DataError) as e:
         print(e)
@@ -116,11 +122,11 @@ def register_endpoint(request: HttpRequest):
 def refresh_auth_token(request: HttpRequest, *args):
     try:
         request.COOKIES["auth_token"]
-    except:
+    except KeyError:
         return response.HttpResponseBadRequest(reason="no auth token")
     try:
         auth = ourJWT.Decoder.decode(request.COOKIES.get("auth_token"), check_date=False)
-    except:
+    except (ourJWT.ExpiredToken, ourJWT.BadSubject, ourJWT.RefusedToken):
         return response.HttpResponseBadRequest(reason='bad auth token')
     auth_login = auth.get("login")
 
@@ -134,8 +140,10 @@ def refresh_auth_token(request: HttpRequest, *args):
         return response.HttpResponseBadRequest("decode error")
 
     refresh_pk = refresh.get("pk")
-    user = get_object_or_404(User, pk=refresh_pk)
-
+    try:
+        user = get_object_or_404(User, pk=refresh_pk)
+    except Http404:
+        return response.Http404()
     if user.login != auth_login:
         return response.HttpResponseForbidden("token error")
 
