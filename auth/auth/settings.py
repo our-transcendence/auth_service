@@ -35,6 +35,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '82.64.223.220',
     '127.0.0.1',
+    'localhost'
     'auth-nginx'
 ]
 
