@@ -26,7 +26,8 @@ def return_auth_cookie(user: User, full_response: response.HttpResponse):
     payload = crypto.encoder.encode(user_dict, "auth")
     full_response.set_cookie(key="auth_token",
                              value=payload,
-                             httponly=True)
+                             httponly=True,
+                             samesite="Strict")
     return full_response
 
 
@@ -34,7 +35,9 @@ def return_refresh_token(user: User):
     full_response = response.HttpResponse()
     full_response.set_cookie(key='refresh_token',
                              value=user.generate_refresh_token(),
-                             httponly=True)
+                             httponly=True,
+                             samesite="Strict"
+                             )
     return return_auth_cookie(user, full_response)
 
 
