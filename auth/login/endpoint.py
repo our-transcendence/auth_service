@@ -20,6 +20,8 @@ import os
 
 import json
 
+import pyotp
+
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 
@@ -117,6 +119,7 @@ def register_endpoint(request: HttpRequest):
     return return_refresh_token(new_user)
 
 
+#Can't use the decorator as the auth token may be expired
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def refresh_auth_token(request: HttpRequest, *args):
@@ -153,6 +156,18 @@ def refresh_auth_token(request: HttpRequest, *args):
 
     return return_auth_cookie(user, response.HttpResponse(status=200))
 
+@ourJWT.Decoder.check_auth()
+def set_totp(request, **kwargs):
+    auth = kwargs["token"]
+    key = auth["id"]
+    try:
+        user = get_object_or_404(User, pk=key)
+    except Http404:
+        return response.Http404()
+    if user.totp_enabled is True:
+        return response.HttpResponseForbidden(reason="2FA already enabled for the account")
+    user.totp_key = pyotp.random_base32()
+    return response.JsonResponse() #TODO finish this
 
 @ourJWT.Decoder.check_auth()
 def test_decorator(request, **kwargs):
