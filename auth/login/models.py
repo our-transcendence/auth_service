@@ -2,7 +2,6 @@ from datetime import datetime, timedelta
 
 from django.db import models
 from django.core.validators import MinLengthValidator
-from django.conf import settings
 
 from .crypto import encoder
 
@@ -11,7 +10,7 @@ class User(models.Model):
     id = models.BigAutoField(primary_key=True)
     login = models.CharField(max_length=15, unique=True)
     password = models.CharField(
-        max_length=25,
+        max_length=256,
         validators=[MinLengthValidator(5, "Must contains at least 5 char")]
     )
     displayName = models.CharField(
@@ -21,7 +20,9 @@ class User(models.Model):
     )
     pongElo = models.PositiveIntegerField(default=200)
     gunFightElo = models.PositiveIntegerField(default=200)
-    picture = models.CharField(max_length=25, null=True)
+    picture = models.CharField(max_length=25,
+                               null=True,
+                               blank=True)
     jwt_emitted = models.IntegerField(default=0)
 
     def generate_refresh_token(self):

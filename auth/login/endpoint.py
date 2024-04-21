@@ -1,16 +1,20 @@
+import binascii
 from datetime import datetime, timedelta
 
-import ourJWT.OUR_exception
-from django.http import response, HttpRequest
+from django.db import OperationalError, IntegrityError, DataError
+from django.http import response, HttpRequest, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404
+from django.core import exceptions
+from django.contrib.auth import hashers
+
+import ourJWT.OUR_exception
 
 from . import crypto
-from django.core import exceptions
-from login.models import User
 
+from login.models import User
 import base64
 import os
 
@@ -26,8 +30,8 @@ def return_auth_cookie(user: User, full_response: response.HttpResponse):
     payload = crypto.encoder.encode(user_dict, "auth")
     full_response.set_cookie(key="auth_token",
                              value=payload,
-                             httponly=True,
-                             samesite="Strict")
+                             secure=True,
+                             httponly=True)
     return full_response
 
 
@@ -35,9 +39,10 @@ def return_refresh_token(user: User):
     full_response = response.HttpResponse()
     full_response.set_cookie(key='refresh_token',
                              value=user.generate_refresh_token(),
+                              secure=True,
                              httponly=True,
-                             samesite="Strict"
-                             )
+                             samesite="Strict")
+
     return return_auth_cookie(user, full_response)
 
 
@@ -51,20 +56,26 @@ def login_endpoint(request: HttpRequest):
     auth: str = request.headers.get("Authorization", None)
     if auth is None:
         return response.HttpResponseBadRequest(reason="No Authorization header found in request")
-    auth_type: str = auth.split(" ")[0]
+    auth_type: str = auth.split(" ", 1)[0]
     if auth_type != "Basic":
         return response.HttpResponseBadRequest(reason="invalid Authorization type")
     auth_data_encoded: str = auth.split(" ")[1]
-    auth_data = base64.b64decode(auth_data_encoded).decode()
+    try:
+        auth_data = base64.b64decode(auth_data_encoded).decode()
+    except binascii.Error:
+        return response.HttpResponseBadRequest(reason="invalid encoding")
     login = auth_data.split(":")[0]
-    password = auth_data.split(":", 1)[1]
-
+    try:
+        password = auth_data.split(":", 1)[1]
+    except IndexError:
+        return response.HttpResponse(status=401, reason='Invalid credential')
     try:
         user: User = User.objects.get(login=login)
     except exceptions.ObjectDoesNotExist:
         return response.HttpResponse(status=401, reason='Invalid credential')
 
-    if user.password == password:
+    if hashers.check_password(password, user.password):
+        print(f"{password}\n{user.password}")
         return return_refresh_token(user=user)
     else:
         return response.HttpResponse(status=401, reason='Invalid credential')
@@ -76,22 +87,34 @@ def register_endpoint(request: HttpRequest):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.HttpResponse(status=400, reason="JSON Decode Error")
+        return response.HttpResponseBadRequest(reason="JSON Decode Error")
 
     expected_keys = {"login", "password", "display_name"}
     if set(data.keys()) != expected_keys:
-        return response.HttpResponse(status=400, reason="Bad Keys")
+        return response.HttpResponseBadRequest(reason="Bad Keys")
 
     login = data["login"]
     display_name = data["display_name"]
     password = data["password"]
 
+    if password.__len__() < 5:
+        return response.HttpResponseBadRequest(reason="Invalid credential")
+
     if User.objects.filter(login=login).exists():
         return response.HttpResponse(status=401, reason="User with this login already exists")
 
-    new_user = User(login=login, password=password, displayName=display_name)
+    try:
+        new_user = User(login=login, password=password, displayName=display_name)
+        new_user.clean_fields()
+        new_user.save()
+    except (IntegrityError, OperationalError) as e:
+        print(f"DATABASE FAILURE {e}")
+        return response.HttpResponse(status=500, reason="Database Failure")
+    except (exceptions.ValidationError, DataError) as e:
+        print(e)
+        return response.HttpResponseBadRequest(reason="Invalid credential")
+    new_user.password = hashers.make_password(password)
     new_user.save()
-
     return return_refresh_token(new_user)
 
 
@@ -100,11 +123,11 @@ def register_endpoint(request: HttpRequest):
 def refresh_auth_token(request: HttpRequest, *args):
     try:
         request.COOKIES["auth_token"]
-    except:
+    except KeyError:
         return response.HttpResponseBadRequest(reason="no auth token")
     try:
         auth = ourJWT.Decoder.decode(request.COOKIES.get("auth_token"), check_date=False)
-    except:
+    except (ourJWT.ExpiredToken, ourJWT.BadSubject, ourJWT.RefusedToken):
         return response.HttpResponseBadRequest(reason='bad auth token')
     auth_login = auth.get("login")
 
@@ -118,13 +141,15 @@ def refresh_auth_token(request: HttpRequest, *args):
         return response.HttpResponseBadRequest("decode error")
 
     refresh_pk = refresh.get("pk")
-    user = get_object_or_404(User, pk=refresh_pk)
-
+    try:
+        user = get_object_or_404(User, pk=refresh_pk)
+    except Http404:
+        return response.Http404()
     if user.login != auth_login:
         return response.HttpResponseForbidden("token error")
 
-    id = refresh["jti"]
-    if id != user.jwt_emitted:
+    jwt_id = refresh["jti"]
+    if jwt_id != user.jwt_emitted:
         return response.HttpResponseBadRequest(reason="token error")
 
     return return_auth_cookie(user, response.HttpResponse(status=200))
@@ -138,5 +163,5 @@ def test_decorator(request, **kwargs):
 
 
 @require_GET
-def pubkey_retrival(request):
+def pubkey_retrival():
     return response.HttpResponse(crypto.PUBKEY)
