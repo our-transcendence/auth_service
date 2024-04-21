@@ -39,9 +39,10 @@ def return_refresh_token(user: User):
     full_response = response.HttpResponse()
     full_response.set_cookie(key='refresh_token',
                              value=user.generate_refresh_token(),
-                             secure=True,
+                              secure=True,
                              httponly=True,
                              samesite="Strict")
+
     return return_auth_cookie(user, full_response)
 
 
