@@ -13,7 +13,6 @@ from django.contrib.auth import hashers
 import ourJWT.OUR_exception
 
 from . import crypto
-
 from login.models import User
 import base64
 import os
@@ -75,8 +74,21 @@ def login_endpoint(request: HttpRequest):
     except exceptions.ObjectDoesNotExist:
         return response.HttpResponse(status=401, reason='Invalid credential')
 
+    if request.body:
+            # User has sent an otp code and the password has been checked.
+        user_code = json.loads(request.body).get("otp_code")
+        if (user_code is not None) & (user.login_attempt is not None):
+            if (user.login_attempt + timedelta(minutes=1)) < datetime.now():
+                if user.totp_item.verify(user_code):
+                    user.login_attempt = None
+                    return return_refresh_token(user=user)
+                return response.HttpResponseBadRequest(reason="BAD OTP")
+            return response.HttpResponseForbidden(reason="OTP validation timed out")
+
     if hashers.check_password(password, user.password):
-        print(f"{password}\n{user.password}")
+        if user.totp_enabled:
+            user.login_attempt = datetime.now()
+            return response.HttpResponse(status=202, reason="Expecting OTP")
         return return_refresh_token(user=user)
     else:
         return response.HttpResponse(status=401, reason='Invalid credential')
@@ -156,8 +168,11 @@ def refresh_auth_token(request: HttpRequest, *args):
 
     return return_auth_cookie(user, response.HttpResponse(status=200))
 
+
+@csrf_exempt
 @ourJWT.Decoder.check_auth()
-def set_totp(request, **kwargs):
+@require_http_methods("PATCH")
+def set_totp(request: HttpRequest, **kwargs):
     auth = kwargs["token"]
     key = auth["id"]
     try:
@@ -166,8 +181,22 @@ def set_totp(request, **kwargs):
         return response.Http404()
     if user.totp_enabled is True:
         return response.HttpResponseForbidden(reason="2FA already enabled for the account")
+
+    if request.body:
+        # the request has also sent in an otp code, user already have the otp key saved somewhere
+        user_code = json.loads(request.body).get("otp_code")
+        if user_code is not None:
+            if user.totp_item.verify(user_code):
+                user.totp_enabled = True
+                return response.HttpResponse(status=200)
+            else:
+                return response.HttpResponseBadRequest("BAD OTP")
+
     user.totp_key = pyotp.random_base32()
-    return response.JsonResponse() #TODO finish this
+    user.totp_item = pyotp.totp.TOTP(user.totp_key)
+    response_content = {"totp_key": user.totp_key}
+    return response.JsonResponse(response_content, status=202, reason="Expecting OTP")
+
 
 @ourJWT.Decoder.check_auth()
 def test_decorator(request, **kwargs):

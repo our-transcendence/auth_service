@@ -5,6 +5,7 @@ from django.core.validators import MinLengthValidator
 
 from .crypto import encoder
 
+import pyotp
 
 # Create your models here.
 class User(models.Model):
@@ -29,6 +30,8 @@ class User(models.Model):
                                 null=True,
                                 blank=True
                                 )
+    totp_item: pyotp.totp.TOTP
+    login_attempt = models.DateField(default=None, null=True, blank=True)
     totp_enabled = models.BooleanField(default=False)
 
     def generate_refresh_token(self):
