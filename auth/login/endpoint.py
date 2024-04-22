@@ -163,5 +163,5 @@ def test_decorator(request, **kwargs):
 
 
 @require_GET
-def pubkey_retrival():
+def pubkey_retrieval(request):
     return response.HttpResponse(crypto.PUBKEY)
