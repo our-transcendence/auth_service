@@ -30,9 +30,14 @@ class User(models.Model):
                                 null=True,
                                 blank=True
                                 )
-    totp_item: pyotp.totp.TOTP
     login_attempt = models.DateField(default=None, null=True, blank=True)
     totp_enabled = models.BooleanField(default=False)
+
+    @property
+    def totp_item(self):
+        if self.totp_key:
+            return pyotp.totp.TOTP(self.totp_key)
+        return None
 
     def generate_refresh_token(self):
         expdate = datetime.now() + timedelta(days=7)
