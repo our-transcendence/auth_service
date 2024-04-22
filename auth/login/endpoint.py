@@ -77,10 +77,11 @@ def login_endpoint(request: HttpRequest):
     if request.body:
             # User has sent an otp code and the password has been checked.
         user_code = json.loads(request.body).get("otp_code")
-        if (user_code is not None) & (user.login_attempt is not None):
-            if (user.login_attempt + timedelta(minutes=1)) < datetime.now():
+        if (user_code is not None) and (user.login_attempt is not None):
+            if (user.login_attempt + timedelta(minutes=1)) < datetime.now(): # TODO: Fix this c'est pete, comment ca marche dateTime en python
                 if user.totp_item.verify(user_code):
                     user.login_attempt = None
+                    user.save()
                     return return_refresh_token(user=user)
                 return response.HttpResponseBadRequest(reason="BAD OTP")
             return response.HttpResponseForbidden(reason="OTP validation timed out")
@@ -88,6 +89,7 @@ def login_endpoint(request: HttpRequest):
     if hashers.check_password(password, user.password):
         if user.totp_enabled:
             user.login_attempt = datetime.now()
+            user.save()
             return response.HttpResponse(status=202, reason="Expecting OTP")
         return return_refresh_token(user=user)
     else:
@@ -141,8 +143,10 @@ def refresh_auth_token(request: HttpRequest, *args):
         return response.HttpResponseBadRequest(reason="no auth token")
     try:
         auth = ourJWT.Decoder.decode(request.COOKIES.get("auth_token"), check_date=False)
-    except (ourJWT.ExpiredToken, ourJWT.BadSubject, ourJWT.RefusedToken):
+    except (ourJWT.BadSubject, ourJWT.RefusedToken):
         return response.HttpResponseBadRequest(reason='bad auth token')
+    except ourJWT.ExpiredToken:
+        pass
     auth_login = auth.get("login")
 
     try:
@@ -182,18 +186,22 @@ def set_totp(request: HttpRequest, **kwargs):
     if user.totp_enabled is True:
         return response.HttpResponseForbidden(reason="2FA already enabled for the account")
 
-    if request.body:
+    if request.body and (user.totp_key is not None):
         # the request has also sent in an otp code, user already have the otp key saved somewhere
-        user_code = json.loads(request.body).get("otp_code")
+        try :
+            user_code = json.loads(request.body).get("otp_code")
+        except json.JSONDecodeError:
+            return response.HttpResponseBadRequest("Json error")
         if user_code is not None:
             if user.totp_item.verify(user_code):
                 user.totp_enabled = True
+                user.save()
                 return response.HttpResponse(status=200)
             else:
                 return response.HttpResponseBadRequest("BAD OTP")
 
     user.totp_key = pyotp.random_base32()
-    user.totp_item = pyotp.totp.TOTP(user.totp_key)
+    user.save()
     response_content = {"totp_key": user.totp_key}
     return response.JsonResponse(response_content, status=202, reason="Expecting OTP")
 
