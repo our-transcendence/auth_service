@@ -30,7 +30,7 @@ class User(models.Model):
                                 null=True,
                                 blank=True
                                 )
-    login_attempt = models.DateField(default=None, null=True, blank=True)
+    login_attempt = models.DateTimeField(default=None, null=True, blank=True)
     totp_enabled = models.BooleanField(default=False)
 
     @property
