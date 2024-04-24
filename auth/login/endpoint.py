@@ -80,13 +80,17 @@ def login_endpoint(request: HttpRequest):
         # User has sent an otp code and the password has been checked.
         user_code = json.loads(request.body).get("otp_code")
         if user_code is not None:
-            # if (user.login_attempt + timedelta(minutes=5)) < timezone.now():  # TODO: Fix this c'est pete, comment ca marche dateTime en python
+            if (user.login_attempt + timedelta(minutes=1)) > timezone.now():
                 if user.totp_item.verify(user_code):
                     user.login_attempt = None
                     user.save()
                     return return_refresh_token(user=user)
+                user.login_attempt = None
+                user.save()
                 return response.HttpResponseBadRequest(reason="BAD OTP")
-            # return response.HttpResponseForbidden(reason="OTP validation timed out")
+            user.login_attempt = None
+            user.save()
+            return response.HttpResponseForbidden(reason="OTP validation timed out")
 
     if hashers.check_password(password, user.password):
         if user.totp_enabled:
