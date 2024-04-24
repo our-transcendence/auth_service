@@ -9,6 +9,8 @@ from django.forms.models import model_to_dict
 from django.shortcuts import get_object_or_404
 from django.core import exceptions
 from django.contrib.auth import hashers
+from django.utils import timezone
+
 
 import ourJWT.OUR_exception
 
@@ -74,21 +76,21 @@ def login_endpoint(request: HttpRequest):
     except exceptions.ObjectDoesNotExist:
         return response.HttpResponse(status=401, reason='Invalid credential')
 
-    if request.body:
-            # User has sent an otp code and the password has been checked.
+    if (user.login_attempt is not None) and request.body:
+        # User has sent an otp code and the password has been checked.
         user_code = json.loads(request.body).get("otp_code")
-        if (user_code is not None) and (user.login_attempt is not None):
-            if (user.login_attempt + timedelta(minutes=1)) < datetime.now(): # TODO: Fix this c'est pete, comment ca marche dateTime en python
+        if user_code is not None:
+            # if (user.login_attempt + timedelta(minutes=5)) < timezone.now():  # TODO: Fix this c'est pete, comment ca marche dateTime en python
                 if user.totp_item.verify(user_code):
                     user.login_attempt = None
                     user.save()
                     return return_refresh_token(user=user)
                 return response.HttpResponseBadRequest(reason="BAD OTP")
-            return response.HttpResponseForbidden(reason="OTP validation timed out")
+            # return response.HttpResponseForbidden(reason="OTP validation timed out")
 
     if hashers.check_password(password, user.password):
         if user.totp_enabled:
-            user.login_attempt = datetime.now()
+            user.login_attempt = timezone.now()
             user.save()
             return response.HttpResponse(status=202, reason="Expecting OTP")
         return return_refresh_token(user=user)
@@ -188,7 +190,7 @@ def set_totp(request: HttpRequest, **kwargs):
 
     if request.body and (user.totp_key is not None):
         # the request has also sent in an otp code, user already have the otp key saved somewhere
-        try :
+        try:
             user_code = json.loads(request.body).get("otp_code")
         except json.JSONDecodeError:
             return response.HttpResponseBadRequest("Json error")
@@ -214,5 +216,5 @@ def test_decorator(request, **kwargs):
 
 
 @require_GET
-def pubkey_retrival():
+def pubkey_retrival(request):
     return response.HttpResponse(crypto.PUBKEY)
