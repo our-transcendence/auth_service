@@ -26,8 +26,21 @@ import pyotp
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 
+def get_user_from_jwt(kwargs):
+    auth = kwargs["token"]
+    key = auth["id"]
+    try:
+        user = get_object_or_404(User, pk=key)
+    except Http404:
+        return response.Http404()
+    return user
+
+
 def return_auth_cookie(user: User, full_response: response.HttpResponse):
-    user_dict = model_to_dict(user)
+    user_dict = model_to_dict(user, exclude=["password",
+                                             "totp_key",
+                                             "login_attempt",
+                                             "totp_enabled"])
     expdate = datetime.now() + timedelta(minutes=duration)
     user_dict["exp"] = expdate
     payload = crypto.encoder.encode(user_dict, "auth")
@@ -183,12 +196,7 @@ def refresh_auth_token(request: HttpRequest, *args):
 @ourJWT.Decoder.check_auth()
 @require_http_methods("PATCH")
 def set_totp(request: HttpRequest, **kwargs):
-    auth = kwargs["token"]
-    key = auth["id"]
-    try:
-        user = get_object_or_404(User, pk=key)
-    except Http404:
-        return response.Http404()
+    user = get_user_from_jwt(kwargs)
     if user.totp_enabled is True:
         return response.HttpResponseForbidden(reason="2FA already enabled for the account")
 
