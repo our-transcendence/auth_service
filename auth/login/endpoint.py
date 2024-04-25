@@ -15,6 +15,7 @@ from django.utils import timezone
 import ourJWT.OUR_exception
 
 from . import crypto
+
 from login.models import User
 import base64
 import os
@@ -43,8 +44,8 @@ def return_auth_cookie(user: User, full_response: response.HttpResponse):
     payload = crypto.encoder.encode(user_dict, "auth")
     full_response.set_cookie(key="auth_token",
                              value=payload,
-                             httponly=True,
-                             samesite="Strict")
+                             secure=True,
+                             httponly=True)
     return full_response
 
 
@@ -52,9 +53,10 @@ def return_refresh_token(user: User):
     full_response = response.HttpResponse()
     full_response.set_cookie(key='refresh_token',
                              value=user.generate_refresh_token(),
+                              secure=True,
                              httponly=True,
-                             samesite="Strict"
-                             )
+                             samesite="Strict")
+
     return return_auth_cookie(user, full_response)
 
 
@@ -87,7 +89,7 @@ def login_endpoint(request: HttpRequest):
         user: User = User.objects.get(login=login)
     except exceptions.ObjectDoesNotExist:
         return response.HttpResponse(status=401, reason='Invalid credential')
-
+      
     if  not hashers.check_password(password, user.password):
         return response.HttpResponse(status=401, reason='Invalid credential')
 
@@ -264,5 +266,5 @@ def test_decorator(request, **kwargs):
 
 
 @require_GET
-def pubkey_retrival(request):
+def pubkey_retrieval(request):
     return response.HttpResponse(crypto.PUBKEY)

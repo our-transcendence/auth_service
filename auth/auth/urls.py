@@ -27,4 +27,5 @@ urlpatterns = [
     path('public_key/', endpoint.pubkey_retrival),
     path('enable_totp/', endpoint.set_totp),
     path('otp/', endpoint.otp_submit)
+
 ]

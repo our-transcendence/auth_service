@@ -34,12 +34,17 @@ DEBUG = True
 ALLOWED_HOSTS = [
     '82.64.223.220',
     '127.0.0.1',
-    'localhost'
+    'localhost',
     'auth-nginx'
 ]
 
+CORS_ALLOW_CREDENTIALS = True
+
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost"
+    "http://localhost",
+    "https://localhost",
+	"https://127.0.0.1:4443",
+	"https://localhost:4443",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
