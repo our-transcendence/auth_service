@@ -29,10 +29,7 @@ duration = int(os.getenv("AUTH_LIFETIME", "10"))
 def get_user_from_jwt(kwargs):
     auth = kwargs["token"]
     key = auth["id"]
-    try:
-        user = get_object_or_404(User, pk=key)
-    except Http404:
-        return response.Http404()
+    user = get_object_or_404(User, pk=key)
     return user
 
 
@@ -102,7 +99,8 @@ def login_endpoint(request: HttpRequest):
     need_otp_response: response.HttpResponse = response.HttpResponse(status=202, reason="Expecting OTP")
     need_otp_response.set_cookie(key="otp_user_ID",
                                  value=user.id,
-                                 httponly=True)
+                                 httponly=True,
+                                 max_age=timedelta(seconds=60))
     return need_otp_response
 
 
@@ -155,8 +153,6 @@ def refresh_auth_token(request: HttpRequest, *args):
         auth = ourJWT.Decoder.decode(request.COOKIES.get("auth_token"), check_date=False)
     except (ourJWT.BadSubject, ourJWT.RefusedToken):
         return response.HttpResponseBadRequest(reason='bad auth token')
-    except ourJWT.ExpiredToken:
-        pass
     auth_login = auth.get("login")
 
     try:
@@ -187,28 +183,77 @@ def refresh_auth_token(request: HttpRequest, *args):
 @ourJWT.Decoder.check_auth()
 @require_http_methods("PATCH")
 def set_totp(request: HttpRequest, **kwargs):
-    user = get_user_from_jwt(kwargs)
+    try:
+        user = get_user_from_jwt(kwargs)
+    except Http404:
+        return response.HttpResponseNotFound("No user found with given ID")
+
     if user.totp_enabled is True:
         return response.HttpResponseForbidden(reason="2FA already enabled for the account")
 
-    if request.body and (user.totp_key is not None):
-        # the request has also sent in an otp code, user already have the otp key saved somewhere
-        try:
-            user_code = json.loads(request.body).get("otp_code")
-        except json.JSONDecodeError:
-            return response.HttpResponseBadRequest("Json error")
-        if user_code is not None:
-            if user.totp_item.verify(user_code):
-                user.totp_enabled = True
-                user.save()
-                return response.HttpResponse(status=200)
-            else:
-                return response.HttpResponseBadRequest("BAD OTP")
-
     user.totp_key = pyotp.random_base32()
+    user.login_attempt = timezone.now()
     user.save()
-    response_content = {"totp_key": user.totp_key}
+    response_content = {"totp_key": user.totp_key,
+                        "Key Uri Format":
+                            f"otpauth://totp/OUR_Transcendence:{user.login}"
+                            "?secret={user.totp_key}"
+                            "&issuer=OUR_Transcendence-auth"}
     return response.JsonResponse(response_content, status=202, reason="Expecting OTP")
+
+@csrf_exempt
+@require_POST
+def otp_submit(request: HttpRequest):
+    auth_token = request.COOKIES.get("auth_token")
+    if auth_token is None: # pas de token Auth donne, le user n'est pas connecte
+        user_id = request.COOKIES.get("otp_user_ID")
+        if user_id is None:
+            return response.HttpResponseBadRequest()
+        try :
+            user = get_object_or_404(User, pk=user_id)
+        except Http404:
+            return response.HttpResponseNotFound("no user found with given ID")
+    else:
+        try:
+            auth = ourJWT.Decoder.decode(auth_token)
+        except (ourJWT.BadSubject, ourJWT.RefusedToken, ourJWT.ExpiredToken):
+            return response.HttpResponseBadRequest(reason='bad auth token')
+        try:
+            user = get_user_from_jwt({"token":auth})
+        except Http404:
+            return response.HttpResponseNotFound("no user found with given ID")
+
+    if user.totp_key is None:
+        return response.HttpResponse(status=412, reason="OTP not set up for user")
+    if not request.body:
+        user.totp_key = None
+        user.save()
+        return response.HttpResponseBadRequest(reason="empty request")
+
+    user_code = json.loads(request.body).get("otp_code")
+    if user_code is None:
+        if not user.totp_enabled:
+            user.totp_key = None
+            user.save()
+        return response.HttpResponseBadRequest(reason="No otp in request")
+    if (user.login_attempt + timedelta(minutes=1)) < timezone.now():
+        if not user.totp_enabled:
+            user.totp_key = None
+            user.save()
+        return response.HttpResponseForbidden(reason="OTP validation timed out")
+
+    user.login_attempt = None
+    if not user.totp_item.verify(user_code):
+        user.save()
+        return response.HttpResponseForbidden(reason="Bad OTP")
+
+    if not user.totp_enabled:
+        user.totp_enabled = True
+        user.save()
+        return response.HttpResponse()
+    user.save()
+    return return_refresh_token(user=user)
+
 
 
 @ourJWT.Decoder.check_auth()
