@@ -71,9 +71,11 @@ def login_endpoint(request: HttpRequest):
     auth: str = request.headers.get("Authorization", None)
     if auth is None:
         return response.HttpResponseBadRequest(reason="No Authorization header found in request")
+
     auth_type: str = auth.split(" ", 1)[0]
     if auth_type != "Basic":
         return response.HttpResponseBadRequest(reason="invalid Authorization type")
+
     auth_data_encoded: str = auth.split(" ")[1]
     try:
         auth_data = base64.b64decode(auth_data_encoded).decode()
@@ -89,30 +91,19 @@ def login_endpoint(request: HttpRequest):
     except exceptions.ObjectDoesNotExist:
         return response.HttpResponse(status=401, reason='Invalid credential')
 
-    if (user.login_attempt is not None) and request.body:
-        # User has sent an otp code and the password has been checked.
-        user_code = json.loads(request.body).get("otp_code")
-        if user_code is not None:
-            if (user.login_attempt + timedelta(minutes=1)) > timezone.now():
-                if user.totp_item.verify(user_code):
-                    user.login_attempt = None
-                    user.save()
-                    return return_refresh_token(user=user)
-                user.login_attempt = None
-                user.save()
-                return response.HttpResponseBadRequest(reason="BAD OTP")
-            user.login_attempt = None
-            user.save()
-            return response.HttpResponseForbidden(reason="OTP validation timed out")
-
-    if hashers.check_password(password, user.password):
-        if user.totp_enabled:
-            user.login_attempt = timezone.now()
-            user.save()
-            return response.HttpResponse(status=202, reason="Expecting OTP")
-        return return_refresh_token(user=user)
-    else:
+    if  not hashers.check_password(password, user.password):
         return response.HttpResponse(status=401, reason='Invalid credential')
+
+    if not user.totp_enabled:
+        return return_refresh_token(user=user)
+
+    user.login_attempt = timezone.now()
+    user.save()
+    need_otp_response: response.HttpResponse = response.HttpResponse(status=202, reason="Expecting OTP")
+    need_otp_response.set_cookie(key="otp_user_ID",
+                                 value=user.id,
+                                 httponly=True)
+    return need_otp_response
 
 
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
