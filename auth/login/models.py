@@ -5,6 +5,8 @@ from django.core.validators import MinLengthValidator
 
 from .crypto import encoder
 
+import pyotp
+
 # Create your models here.
 class User(models.Model):
     id = models.BigAutoField(primary_key=True)
@@ -24,6 +26,18 @@ class User(models.Model):
                                null=True,
                                blank=True)
     jwt_emitted = models.IntegerField(default=0)
+    totp_key = models.CharField(max_length=100,
+                                null=True,
+                                blank=True
+                                )
+    login_attempt = models.DateTimeField(default=None, null=True, blank=True)
+    totp_enabled = models.BooleanField(default=False)
+
+    @property
+    def totp_item(self):
+        if self.totp_key:
+            return pyotp.totp.TOTP(self.totp_key)
+        return None
 
     def generate_refresh_token(self):
         expdate = datetime.now() + timedelta(days=7)
