@@ -100,7 +100,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get("POSTGRES_DB", "DB"),
-        'HOST': "postgres",
+        'HOST': "localhost",
         "USER": os.environ.get("POSTGRES_USER", "USER"),
         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "PASSWORD"),
         "PORT": "5432",
@@ -147,3 +147,5 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+USER_SERVICE_URL="http://user-service"

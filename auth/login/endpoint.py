@@ -24,6 +24,9 @@ import json
 
 import pyotp
 
+from django.conf import settings
+import requests
+
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 
@@ -129,15 +132,32 @@ def register_endpoint(request: HttpRequest):
         return response.HttpResponse(status=401, reason="User with this login already exists")
 
     try:
-        new_user = User(login=login, password=password, displayName=display_name)
+        new_user = User(login=login, password=password)
         new_user.clean_fields()
         new_user.save()
+        new_user_id = new_user.id
+
+        createdata = {"id:" : new_user_id, "login:" : login}
+        requests.post(settings.USER_SERVICE_URL + "/register", createdata)
+        if response.status_code != 200:
+            new_user.delete()
+            return response.HttpResponse(status=response.status_code, reason=response.text)
+
+        updatedata = {"display_name": display_name}
+        requests.post(settings.USER_SERVICE_URL + "/" + new_user_id + "/update", updatedata)
+        if response.status_code != 200:
+            new_user.delete()
+            return response.HttpResponse(status=response.status_code, reason=response.text)
     except (IntegrityError, OperationalError) as e:
         print(f"DATABASE FAILURE {e}")
         return response.HttpResponse(status=500, reason="Database Failure")
     except (exceptions.ValidationError, DataError) as e:
         print(e)
         return response.HttpResponseBadRequest(reason="Invalid credential")
+    except requests.exceptions.ConnectionError as e:
+        new_user.delete()
+        print(e)
+        return response.HttpResponse(status=500, reason="Cant connect to user-service")
     new_user.password = hashers.make_password(password)
     new_user.save()
     return return_refresh_token(new_user)
