@@ -148,4 +148,4 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-USER_SERVICE_URL="http://user-service"
+USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "http://user-service")
