@@ -300,7 +300,7 @@ def token_42(request: HttpRequest):
     }
     try:
         oauth_response = requests.post("https://api.intra.42.fr/oauth/token", data=post_data)
-    except requests.exceptions.ConnectionError as e:
+    except requests.exceptions.ConnectionError:
         return response.HttpResponse(status=500, reason="Cant connect to 42 api")
     if oauth_response.status_code != 200:
         return response.HttpResponse(status=oauth_response.status_code, reason=f"Error: {oauth_response.status_code}, {oauth_response.text}")
@@ -320,5 +320,15 @@ def login_42(request: HttpRequest):
     if set(data.keys()) != expected_keys:
         return response.HttpResponseBadRequest(reason="Bad Keys")
     access_token = data["access_token"]
+
+    # try request to api with the token
+
+    # get the login
+
+    # search if login exists in database
+
+    # if yes, then just login
+
+    # if no, register the user in the database
 
 
