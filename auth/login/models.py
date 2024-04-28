@@ -15,16 +15,6 @@ class User(models.Model):
         max_length=256,
         validators=[MinLengthValidator(5, "Must contains at least 5 char")]
     )
-    displayName = models.CharField(
-        max_length=25,
-        validators=[MinLengthValidator(5, "Must contains at least 5 char")],
-        null=True
-    )
-    pongElo = models.PositiveIntegerField(default=200)
-    gunFightElo = models.PositiveIntegerField(default=200)
-    picture = models.CharField(max_length=25,
-                               null=True,
-                               blank=True)
     jwt_emitted = models.IntegerField(default=0)
     totp_key = models.CharField(max_length=100,
                                 null=True,
