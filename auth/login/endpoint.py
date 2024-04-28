@@ -137,17 +137,17 @@ def register_endpoint(request: HttpRequest):
         new_user.save()
         new_user_id = new_user.id
 
-        createdata = {"id:" : new_user_id, "login:" : login}
-        requests.post(settings.USER_SERVICE_URL + "/register", createdata)
-        if response.status_code != 200:
+        create_request_data = {"id:" : new_user_id, "login:" : login}
+        create_response = requests.post(settings.USER_SERVICE_URL + "/register", create_request_data)
+        if create_response.status_code != 200:
             new_user.delete()
-            return response.HttpResponse(status=response.status_code, reason=response.text)
+            return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
 
-        updatedata = {"display_name": display_name}
-        requests.post(settings.USER_SERVICE_URL + "/" + new_user_id + "/update", updatedata)
-        if response.status_code != 200:
+        update_request_data = {"display_name": display_name}
+        update_response = requests.post(settings.USER_SERVICE_URL + "/" + new_user_id + "/update", update_request_data)
+        if update_response.status_code != 200:
             new_user.delete()
-            return response.HttpResponse(status=response.status_code, reason=response.text)
+            return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
     except (IntegrityError, OperationalError) as e:
         print(f"DATABASE FAILURE {e}")
         return response.HttpResponse(status=500, reason="Database Failure")
