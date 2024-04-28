@@ -26,5 +26,7 @@ urlpatterns = [
     path('test/', endpoint.test_decorator),
     path('public_key/', endpoint.pubkey_retrieval),
     path('enable_totp/', endpoint.set_totp),
-    path('otp/', endpoint.otp_submit)
+    path('otp/', endpoint.otp_submit),
+    path('login_42/', endpoint.login_42_page),
+    path('token_42/', endpoint.token_42)
 ]

@@ -1,5 +1,6 @@
 import binascii
 from datetime import datetime, timedelta
+from urllib import request
 
 from django.db import OperationalError, IntegrityError, DataError
 from django.http import response, HttpRequest, Http404
@@ -23,6 +24,11 @@ import os
 import json
 
 import pyotp
+
+from django.conf import settings
+
+import requests
+
 
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
@@ -256,8 +262,6 @@ def otp_submit(request: HttpRequest):
     user.save()
     return return_refresh_token(user=user)
 
-
-
 @ourJWT.Decoder.check_auth()
 def test_decorator(request, **kwargs):
     auth = kwargs["token"]
@@ -268,3 +272,53 @@ def test_decorator(request, **kwargs):
 @require_GET
 def pubkey_retrieval(request):
     return response.HttpResponse(crypto.PUBKEY)
+
+@csrf_exempt
+@require_GET
+def login_42_page(request: HttpRequest):
+    return response.HttpResponse(settings.LOGIN_42_PAGE_URL)
+
+@csrf_exempt
+@require_GET
+def token_42(request: HttpRequest):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return response.HttpResponseBadRequest(reason="JSON Decode Error")
+
+    expected_keys = {"code"}
+    if set(data.keys()) != expected_keys:
+        return response.HttpResponseBadRequest(reason="Bad Keys")
+    code = data["code"]
+
+    post_data = {
+        "grant_type": "authorization_code",
+        "client_id": settings.API_42_UID,
+        "client_secret": settings.API_42_SECRET,
+        "redirect_uri": settings.API_42_REDIRECT_URI,
+        "code": code,
+    }
+    try:
+        oauth_response = requests.post("https://api.intra.42.fr/oauth/token", data=post_data)
+    except requests.exceptions.ConnectionError as e:
+        return response.HttpResponse(status=500, reason="Cant connect to 42 api")
+    if oauth_response.status_code != 200:
+        return response.HttpResponse(status=oauth_response.status_code, reason=f"Error: {oauth_response.status_code}, {oauth_response.text}")
+    access_token = oauth_response.json().get("access_token")
+    response_content = {"access_token" : access_token}
+    return response.JsonResponse(response_content)
+
+@csrf_exempt
+@require_GET
+def login_42(request: HttpRequest):
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return response.HttpResponseBadRequest(reason="JSON Decode Error")
+
+    expected_keys = {"access_token"}
+    if set(data.keys()) != expected_keys:
+        return response.HttpResponseBadRequest(reason="Bad Keys")
+    access_token = data["access_token"]
+
+

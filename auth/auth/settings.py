@@ -100,7 +100,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get("POSTGRES_DB", "DB"),
-        'HOST': "postgres",
+        'HOST': "localhost",
         "USER": os.environ.get("POSTGRES_USER", "USER"),
         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "PASSWORD"),
         "PORT": "5432",
@@ -147,3 +147,9 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# En production virer le default
+LOGIN_42_PAGE_URL = os.getenv("LOGIN_42_PAGE", default="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-7491e640b7fdd10f26272d296dbcce3b9fbe47e2c9734cbbf0bf41513fd169ed&redirect_uri=http%3A%2F%2Flocalhost%3A8000%2Fcallback&response_type=code")
+API_42_UID = os.getenv("API_42_UID", default="u-s4t2ud-7491e640b7fdd10f26272d296dbcce3b9fbe47e2c9734cbbf0bf41513fd169ed")
+API_42_SECRET = os.getenv("API_42_SECRET", default="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")
+API_42_REDIRECT_URI = os.getenv("API_42_REDIRECT_URI", default="http://localhost:8000/callback")
