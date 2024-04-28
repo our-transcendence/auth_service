@@ -318,12 +318,26 @@ def login_42(request: HttpRequest):
 
     expected_keys = {"access_token"}
     if set(data.keys()) != expected_keys:
-        return response.HttpResponseBadRequest(reason="Bad Keys")
+        return response.HttpResponseBadRequest(reason=f"Bad Keys {data.keys()}, expecting {expected_keys}")
     access_token = data["access_token"]
 
     # try request to api with the token
+    try:
+        profile_request_header = {"Authorization": f"Bearer {access_token}"}
+        profile_response = requests.get("https://api.intra.42.fr/v2/me", headers=profile_request_header)
+    except requests.exceptions.RequestException:
+        return response.HttpResponse(status=500, reason="Cant connect to 42 api")
+
+    if profile_response.status_code != 200:
+        return response.HttpResponse(status=profile_response.status_code, reason=f"Error: {profile_response.status_code}")
 
     # get the login
+    try:
+        data = json.loads(profile_response.text)
+    except json.JSONDecodeError:
+        return response.HttpResponseBadRequest(reason="JSON Decode Error")
+    login_42_data = data["login"]
+    print(login_42_data)
 
     # search if login exists in database
 
