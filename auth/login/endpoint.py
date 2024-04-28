@@ -138,26 +138,26 @@ def register_endpoint(request: HttpRequest):
         new_user_id = new_user.id
 
         create_request_data = {"id:" : new_user_id, "login:" : login}
-        create_response = requests.post(settings.USER_SERVICE_URL + "/register", create_request_data)
+        create_response = requests.post(settings.USER_SERVICE_URL + "/register", create_request_data, verify=False)
         if create_response.status_code != 200:
             new_user.delete()
             return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
 
         update_request_data = {"display_name": display_name}
-        update_response = requests.post(settings.USER_SERVICE_URL + "/" + new_user_id + "/update", update_request_data)
+        update_response = requests.post(settings.USER_SERVICE_URL + "/" + new_user_id + "/update", update_request_data, verify=False)
         if update_response.status_code != 200:
             new_user.delete()
             return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
     except (IntegrityError, OperationalError) as e:
         print(f"DATABASE FAILURE {e}")
-        return response.HttpResponse(status=500, reason="Database Failure")
+        return response.HttpResponse(status=400, reason="Database Failure")
     except (exceptions.ValidationError, DataError) as e:
         print(e)
         return response.HttpResponseBadRequest(reason="Invalid credential")
     except requests.exceptions.ConnectionError as e:
         new_user.delete()
         print(e)
-        return response.HttpResponse(status=500, reason="Cant connect to user-service")
+        return response.HttpResponse(status=408, reason="Cant connect to user-service")
     new_user.password = hashers.make_password(password)
     new_user.save()
     return return_refresh_token(new_user)
