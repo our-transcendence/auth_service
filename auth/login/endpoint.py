@@ -26,15 +26,9 @@ import json
 import pyotp
 
 from django.conf import settings
-<<<<<<< HEAD
 
 import requests
 
-
-=======
-import requests
-
->>>>>>> register-user
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 
@@ -343,35 +337,70 @@ def login_42_endpoint(request: HttpRequest):
         return response.HttpResponseBadRequest(reason=f"Bad Keys {data.keys()}, expecting {expected_keys}")
     access_token = data["access_token"]
 
+    login_42, httpError = get_42_login(access_token)
+    if login_42 is None:
+        return httpError
+
+    # search if login exists in database
+    if not User.objects.filter(login_42=login_42).exists():
+        return response.HttpResponseBadRequest(reason="There is no account associated with this 42 account")
+        # then just login
+    user = User.objects.filter(login_42=login_42)[0]
+    return return_refresh_token(user)
+
+@csrf_exempt
+@require_POST
+def link_42(request: HttpRequest):
+    # check access_token
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return response.HttpResponseBadRequest(reason="JSON Decode Error")
+
+    expected_keys = {"access_token"}
+    if set(data.keys()) != expected_keys:
+        return response.HttpResponseBadRequest(reason=f"Bad Keys {data.keys()}, expecting {expected_keys}")
+    access_token = data["access_token"]
+
+    # check auth_token for our_transcendence
+    try:
+        request.COOKIES["auth_token"]
+    except KeyError:
+        return response.HttpResponseBadRequest(reason="no auth token")
+    try:
+        auth = ourJWT.Decoder.decode(request.COOKIES.get("auth_token"), check_date=False)
+    except (ourJWT.BadSubject, ourJWT.RefusedToken):
+        return response.HttpResponseBadRequest(reason='bad auth token')
+    auth_login = auth.get("login")
+
+    if not User.objects.filter(login=auth_login).exists():
+        return response.HttpResponseBadRequest(reason="There is no account associated with this 42 account")
+    user = User.objects.filter(login=User.objects.filter(login=auth_login))[0]
+    if user.login_42 is not None:
+        return response.HttpResponseBadRequest(reason="There is already a 42 account associated with this account")
+
+
+    login_42, httpError = get_42_login(access_token)
+    if login_42 is None:
+        return httpError
+
+    user.login_42 = login_42
+    return response.HttpResponseOK()
+
+def get_42_login(access_token):
     # try request to api with the token
     try:
         profile_request_header = {"Authorization": f"Bearer {access_token}"}
         profile_response = requests.get("https://api.intra.42.fr/v2/me", headers=profile_request_header)
     except requests.exceptions.RequestException:
-        return response.HttpResponse(status=500, reason="Cant connect to 42 api")
+        return None, response.HttpResponse(status=500, reason="Cant connect to 42 api")
 
     if profile_response.status_code != 200:
-        return response.HttpResponse(status=profile_response.status_code, reason=f"Error: {profile_response.status_code}")
-
+        return None, response.HttpResponse(status=profile_response.status_code, reason=f"Error: {profile_response.status_code}")
     # get the login
     try:
         data = json.loads(profile_response.text)
     except json.JSONDecodeError:
-        return response.HttpResponseBadRequest(reason="JSON Decode Error")
+        return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
     login_42 = data["login"]
-    print(login_42)
-
-    # search if login exists in database
-    if User.objects.filter(login_42=login_42).exists():
-        # then just login
-        user = User.objects.filter(login_42=login_42)[0]
-        return return_refresh_token(user)
-    else:
-        # register the user in the database
-        new_user = User(login_42=login_42)
-        new_user.clean_fields()
-        new_user.save()
-        new_user_id = new_user.id
-
-        create_request_data = {"id": new_user_id}
-        create_response = requests.post()
+    return login_42, None

@@ -29,5 +29,6 @@ urlpatterns = [
     path('otp/', endpoint.otp_submit),
     path('login_42_page/', endpoint.login_42_page),
     path('token_42/', endpoint.token_42),
-    path('login_42/', endpoint.login_42_endpoint)
+    path('login_42/', endpoint.login_42_endpoint),
+    path('link_42/', endpoint.link_42)
 ]
