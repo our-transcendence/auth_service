@@ -310,7 +310,7 @@ def token_42(request: HttpRequest):
 
 @csrf_exempt
 @require_GET
-def login_42(request: HttpRequest):
+def login_42_endpoint(request: HttpRequest):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -336,13 +336,20 @@ def login_42(request: HttpRequest):
         data = json.loads(profile_response.text)
     except json.JSONDecodeError:
         return response.HttpResponseBadRequest(reason="JSON Decode Error")
-    login_42_data = data["login"]
-    print(login_42_data)
+    login_42 = data["login"]
+    print(login_42)
 
     # search if login exists in database
+    if User.objects.filter(login_42=login_42).exists():
+        # then just login
+        user = User.objects.filter(login_42=login_42)[0]
+        return return_refresh_token(user)
+    else:
+        # register the user in the database
+        new_user = User(login_42=login_42)
+        new_user.clean_fields()
+        new_user.save()
+        new_user_id = new_user.id
 
-    # if yes, then just login
-
-    # if no, register the user in the database
-
-
+        create_request_data = {"id": new_user_id}
+        create_response = requests.post()
