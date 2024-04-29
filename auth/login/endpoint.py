@@ -137,7 +137,7 @@ def register_endpoint(request: HttpRequest):
         new_user.save()
         new_user_id = new_user.id
 
-        create_request_data = {"id:" : new_user_id, "login:" : login}
+        create_request_data = {"id" : new_user_id, "login" : login}
         print("------SENDING REQUEST TO USER-SERVICE------", flush=True)
         print (create_request_data, flush=True)
         create_response = requests.post(settings.USER_SERVICE_URL + "/register", create_request_data, verify=False)
