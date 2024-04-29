@@ -12,6 +12,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
+import re
+
 from pathlib import Path
 
 from ourJWT import OUR_class, OUR_exception
@@ -35,7 +37,10 @@ ALLOWED_HOSTS = [
     '82.64.223.220',
     '127.0.0.1',
     'localhost',
-    'auth-nginx'
+    'auth-nginx',
+    'user-nginx',
+    'chat-nginx',
+    'history-nginx'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -45,6 +50,11 @@ CORS_ALLOWED_ORIGINS = [
     "https://localhost",
 	"https://127.0.0.1:4443",
 	"https://localhost:4443",
+]
+
+CORS_ORIGIN_REGEX_WHITELIST = [
+    r"^https://127\.0\.0\.1:\d+$",
+    r"^https://localhost:\d+$",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
