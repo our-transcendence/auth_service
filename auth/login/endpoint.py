@@ -141,7 +141,8 @@ def register_endpoint(request: HttpRequest):
         print("------SENDING REQUEST TO USER-SERVICE------", flush=True)
         print (create_request_data, flush=True)
         headers = {'Content-Type': 'application/json'}
-        create_response = requests.post(settings.USER_SERVICE_URL + "/register", data=json.dumps(create_request_data),
+        create_response = requests.post(f"{settings.USER_SERVICE_URL}/register",
+                                        data=json.dumps(create_request_data),
                                         headers=headers,
                                         verify=False)
         print (f"Received response {create_response.status_code} : {create_response.text}", flush=True)
@@ -150,7 +151,10 @@ def register_endpoint(request: HttpRequest):
             return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
 
         update_request_data = {"display_name": display_name}
-        update_response = requests.post(settings.USER_SERVICE_URL + "/" + new_user_id + "/update", update_request_data, verify=False)
+        update_response = requests.post(f"{settings.USER_SERVICE_URL}/{new_user_id}/update",
+                                        data=json.dumps(update_request_data),
+                                        headers=headers,
+                                        verify=False)
         if update_response.status_code != 200:
             new_user.delete()
             return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
