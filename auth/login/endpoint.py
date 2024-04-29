@@ -92,7 +92,7 @@ def login_endpoint(request: HttpRequest):
         user: User = User.objects.get(login=login)
     except exceptions.ObjectDoesNotExist:
         return response.HttpResponse(status=401, reason='Invalid credential')
-      
+
     if  not hashers.check_password(password, user.password):
         return response.HttpResponse(status=401, reason='Invalid credential')
 
@@ -138,7 +138,10 @@ def register_endpoint(request: HttpRequest):
         new_user_id = new_user.id
 
         create_request_data = {"id:" : new_user_id, "login:" : login}
+        print("------SENDING REQUEST TO USER-SERVICE------", flush=True)
+        print (create_request_data, flush=True)
         create_response = requests.post(settings.USER_SERVICE_URL + "/register", create_request_data, verify=False)
+        print (f"Received response {create_response.status_code} : {create_response.text}", flush=True)
         if create_response.status_code != 200:
             new_user.delete()
             return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
