@@ -118,55 +118,37 @@ def register_endpoint(request: HttpRequest):
     if set(data.keys()) != expected_keys:
         return response.HttpResponseBadRequest(reason="Bad Keys")
 
-    login = data["login"]
-    display_name = data["display_name"]
-    password = data["password"]
+    user_data = {
+        "login": data["login"],
+        "display_name": data["display_name"],
+        "password": data["password"]
+    }
 
-    if password.__len__() < 5:
+    if user_data["password"].__len__() < 5:
+        return response.HttpResponseBadRequest(reason="Invalid credential")
+    if User.objects.filter(login=user_data["login"]).exists():
+        return response.HttpResponseForbidden(reason="User with this login already exists")
+
+    # TODO: don't save before user-service response
+    new_user = User(login=user_data["login"], password=user_data["password"])
+    try:
+        new_user.clean_fields()
+    except (exceptions.ValidationError, DataError) as e:
+        print(e, flush=True)
         return response.HttpResponseBadRequest(reason="Invalid credential")
 
-    if User.objects.filter(login=login).exists():
-        return response.HttpResponse(status=401, reason="User with this login already exists")
-    # TODO: don't save before user-service response
+    send: response.HttpResponse = send_new_user(new_user, user_data)
+    if send.status_code is not 200:
+        return send
+
     try:
-        new_user = User(login=login, password=password)
-        new_user.clean_fields()
+        new_user.password = hashers.make_password(user_data["password"])
         new_user.save()
-        new_user_id = new_user.id
-
-        create_request_data = {"id": new_user_id, "login": login}
-        print("------SENDING REQUEST TO USER-SERVICE------", flush=True)
-        print(create_request_data, flush=True)
-        headers = {'Content-Type': 'application/json'}
-        create_response = requests.post(f"{settings.USER_SERVICE_URL}/register",
-                                        data=json.dumps(create_request_data),
-                                        headers=headers,
-                                        verify=False)
-        print(f"Received response {create_response.status_code} : {create_response.text}", flush=True)
-        if create_response.status_code != 200:
-            new_user.delete()
-            return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
-
-        update_request_data = {"display_name": display_name}
-        update_response = requests.post(f"{settings.USER_SERVICE_URL}/{new_user_id}/update",
-                                        data=json.dumps(update_request_data),
-                                        headers=headers,
-                                        verify=False)
-        if update_response.status_code != 200:
-            new_user.delete()
-            return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
     except (IntegrityError, OperationalError) as e:
         print(f"DATABASE FAILURE {e}")
+        # TODO: Send a request to delete user from user-service
         return response.HttpResponse(status=400, reason="Database Failure")
-    except (exceptions.ValidationError, DataError) as e:
-        print(e)
-        return response.HttpResponseBadRequest(reason="Invalid credential")
-    except requests.exceptions.ConnectionError as e:
-        new_user.delete()
-        print(e)
-        return response.HttpResponse(status=408, reason="Cant connect to user-service")
-    new_user.password = hashers.make_password(password)
-    new_user.save()
+
     return return_refresh_token(new_user)
 
 
@@ -190,7 +172,7 @@ def refresh_auth_token(request: HttpRequest):
         return response.HttpResponseBadRequest(reason="no refresh token")
     try:
         refresh = ourJWT.Decoder.decode(request.COOKIES.get("refresh_token"))
-    except (ourJWT.ExpiredToken, ourJWT.RefusedToken, ourJWT.BadSubject) :
+    except (ourJWT.ExpiredToken, ourJWT.RefusedToken, ourJWT.BadSubject):
         return response.HttpResponseBadRequest("decode error")
 
     refresh_pk = refresh.get("pk")
@@ -295,3 +277,36 @@ def test_decorator(request, **kwargs):
 @require_GET
 def pubkey_retrieval(request):
     return response.HttpResponse(crypto.PUBKEY)
+
+
+def send_new_user(new_user: User, user_data: dict):
+    new_user_id = new_user.id
+    create_request_data = {"id": new_user_id, "login": user_data["login"]}
+    headers = {'Content-Type': 'application/json'}
+    try:
+        create_response = requests.post(f"{settings.USER_SERVICE_URL}/register",
+                                        data=json.dumps(create_request_data),
+                                        headers=headers,
+                                        verify=False)
+    except requests.exceptions.ConnectionError as e:
+        print(e)
+        return response.HttpResponse(status=408, reason="Cant connect to user-service")
+
+    if create_response.status_code != 200:
+        return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
+
+    update_request_data = {"display_name": user_data["display_name"]}
+
+    try:
+        update_response = requests.post(f"{settings.USER_SERVICE_URL}/{new_user_id}/update",
+                                        data=json.dumps(update_request_data),
+                                        headers=headers,
+                                        verify=False)
+    except requests.exceptions.ConnectionError as e:
+        print(e)
+        return response.HttpResponse(status=408, reason="Cant connect to user-service")
+
+    if update_response.status_code != 200:
+        return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
+
+    return update_response
