@@ -129,7 +129,7 @@ def register_endpoint(request: HttpRequest):
     if User.objects.filter(login=user_data["login"]).exists():
         return response.HttpResponseForbidden(reason="User with this login already exists")
 
-    new_user = User(login=user_data["login"], password=user_data["password"])
+    new_user = User(login=user_data["login"], password=user_data["password"], displayName=user_data["display_name"])
     try:
         new_user.save()
     except (IntegrityError, OperationalError) as e:
