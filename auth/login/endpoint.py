@@ -1,31 +1,30 @@
-import binascii
+# Standard library imports
 from datetime import datetime, timedelta
-
-from django.db import OperationalError, IntegrityError, DataError
-from django.http import response, HttpRequest, Http404
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST, require_GET, require_http_methods
-from django.forms.models import model_to_dict
-from django.shortcuts import get_object_or_404
-from django.core import exceptions
-from django.contrib.auth import hashers
-from django.utils import timezone
-
-
-import ourJWT.OUR_exception
-
-from . import crypto
-
-from login.models import User
 import base64
+import binascii
+import json
 import os
 
-import json
-
-import pyotp
-
+# Django imports
 from django.conf import settings
+from django.contrib.auth import hashers
+from django.core import exceptions
+from django.db import OperationalError, IntegrityError, DataError
+from django.forms.models import model_to_dict
+from django.http import response, HttpRequest, Http404
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST, require_GET, require_http_methods
+
+# Third-party imports
+import pyotp
 import requests
+
+# Local application/library specific imports
+from login.models import User
+from . import crypto
+import ourJWT.OUR_exception
 
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
@@ -56,7 +55,7 @@ def return_refresh_token(user: User):
     full_response = response.HttpResponse()
     full_response.set_cookie(key='refresh_token',
                              value=user.generate_refresh_token(),
-                              secure=True,
+                             secure=True,
                              httponly=True,
                              samesite="Strict")
 
@@ -65,8 +64,6 @@ def return_refresh_token(user: User):
 
 # Create your views here.
 
-#TODO: ne pas envoyer le refresh token en body, mais en cookie http only : https://dev.to/bcerati/les-cookies-httponly-une-securite-pour-vos-tokens-2p8n
-#TODO: get info in Authorization request header https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Authorization
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def login_endpoint(request: HttpRequest):
@@ -93,7 +90,7 @@ def login_endpoint(request: HttpRequest):
     except exceptions.ObjectDoesNotExist:
         return response.HttpResponse(status=401, reason='Invalid credential')
 
-    if  not hashers.check_password(password, user.password):
+    if not hashers.check_password(password, user.password):
         return response.HttpResponse(status=401, reason='Invalid credential')
 
     if not user.totp_enabled:
@@ -130,22 +127,22 @@ def register_endpoint(request: HttpRequest):
 
     if User.objects.filter(login=login).exists():
         return response.HttpResponse(status=401, reason="User with this login already exists")
-
+    # TODO: don't save before user-service response
     try:
         new_user = User(login=login, password=password)
         new_user.clean_fields()
         new_user.save()
         new_user_id = new_user.id
 
-        create_request_data = {"id" : new_user_id, "login" : login}
+        create_request_data = {"id": new_user_id, "login": login}
         print("------SENDING REQUEST TO USER-SERVICE------", flush=True)
-        print (create_request_data, flush=True)
+        print(create_request_data, flush=True)
         headers = {'Content-Type': 'application/json'}
         create_response = requests.post(f"{settings.USER_SERVICE_URL}/register",
                                         data=json.dumps(create_request_data),
                                         headers=headers,
                                         verify=False)
-        print (f"Received response {create_response.status_code} : {create_response.text}", flush=True)
+        print(f"Received response {create_response.status_code} : {create_response.text}", flush=True)
         if create_response.status_code != 200:
             new_user.delete()
             return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
@@ -173,10 +170,10 @@ def register_endpoint(request: HttpRequest):
     return return_refresh_token(new_user)
 
 
-#Can't use the decorator as the auth token may be expired
+# Can't use the decorator as the auth token may be expired
 @csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
-def refresh_auth_token(request: HttpRequest, *args):
+def refresh_auth_token(request: HttpRequest):
     try:
         request.COOKIES["auth_token"]
     except KeyError:
@@ -189,11 +186,11 @@ def refresh_auth_token(request: HttpRequest, *args):
 
     try:
         request.COOKIES["refresh_token"]
-    except:
+    except KeyError:
         return response.HttpResponseBadRequest(reason="no refresh token")
     try:
         refresh = ourJWT.Decoder.decode(request.COOKIES.get("refresh_token"))
-    except:
+    except (ourJWT.ExpiredToken, ourJWT.RefusedToken, ourJWT.BadSubject) :
         return response.HttpResponseBadRequest("decode error")
 
     refresh_pk = refresh.get("pk")
@@ -233,15 +230,16 @@ def set_totp(request: HttpRequest, **kwargs):
                             "&issuer=OUR_Transcendence-auth"}
     return response.JsonResponse(response_content, status=202, reason="Expecting OTP")
 
+
 @csrf_exempt
 @require_POST
 def otp_submit(request: HttpRequest):
     auth_token = request.COOKIES.get("auth_token")
-    if auth_token is None: # pas de token Auth donne, le user n'est pas connecte
+    if auth_token is None:  # pas de token Auth donne, le user n'est pas connecte
         user_id = request.COOKIES.get("otp_user_ID")
         if user_id is None:
             return response.HttpResponseBadRequest()
-        try :
+        try:
             user = get_object_or_404(User, pk=user_id)
         except Http404:
             return response.HttpResponseNotFound("no user found with given ID")
@@ -251,7 +249,7 @@ def otp_submit(request: HttpRequest):
         except (ourJWT.BadSubject, ourJWT.RefusedToken, ourJWT.ExpiredToken):
             return response.HttpResponseBadRequest(reason='bad auth token')
         try:
-            user = get_user_from_jwt({"token":auth})
+            user = get_user_from_jwt({"token": auth})
         except Http404:
             return response.HttpResponseNotFound("no user found with given ID")
 
@@ -285,7 +283,6 @@ def otp_submit(request: HttpRequest):
         return response.HttpResponse()
     user.save()
     return return_refresh_token(user=user)
-
 
 
 @ourJWT.Decoder.check_auth()

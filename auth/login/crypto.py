@@ -1,6 +1,12 @@
+# Standard library imports
+
+# Django imports
+
+# Third-party imports
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
+# Local application/library specific imports
 from ourJWT import OUR_class, OUR_exception
 
 

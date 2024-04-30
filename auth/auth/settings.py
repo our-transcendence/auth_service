@@ -11,11 +11,17 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+# Standard library imports
 import os
 import re
 
 from pathlib import Path
 
+# Django imports
+
+# Third-party imports
+
+# Local application/library specific imports
 from ourJWT import OUR_class, OUR_exception
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -48,8 +54,8 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost",
     "https://localhost",
-	"https://127.0.0.1:4443",
-	"https://localhost:4443",
+    "https://127.0.0.1:4443",
+    "https://localhost:4443",
 ]
 
 CORS_ORIGIN_REGEX_WHITELIST = [
@@ -116,8 +122,6 @@ DATABASES = {
         "PORT": "5432",
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
