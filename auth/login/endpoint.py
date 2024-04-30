@@ -129,8 +129,12 @@ def register_endpoint(request: HttpRequest):
     if User.objects.filter(login=user_data["login"]).exists():
         return response.HttpResponseForbidden(reason="User with this login already exists")
 
-    # TODO: don't save before user-service response
     new_user = User(login=user_data["login"], password=user_data["password"])
+    try:
+        new_user.save()
+    except (IntegrityError, OperationalError) as e:
+        return response.HttpResponse(status=400, reason="Database Failure")
+
     try:
         new_user.clean_fields()
     except (exceptions.ValidationError, DataError) as e:
@@ -138,7 +142,7 @@ def register_endpoint(request: HttpRequest):
         return response.HttpResponseBadRequest(reason="Invalid credential")
 
     send: response.HttpResponse = send_new_user(new_user, user_data)
-    if send.status_code is not 200:
+    if send.status_code != 200:
         return send
 
     try:
