@@ -1,4 +1,4 @@
-#docker run -e POSTGRES_PASSWORD=PASSWORD -e POSTGRES_USER=USER -e POSTGRES_DB=DB -p 5432:5432 postgres
+# docker run -e POSTGRES_PASSWORD=PASSWORD -e POSTGRES_USER=USER -e POSTGRES_DB=DB -p 5432:5432 postgres
 
 """
 Django settings for auth project.
@@ -14,7 +14,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 # Standard library imports
 import os
 import re
-
+import urllib3
 from pathlib import Path
 
 # Django imports
@@ -35,6 +35,8 @@ SECRET_KEY = 'django-insecure-bha_z48$lrtojju%5*y5y399k@f%c5!dnu80pbm7u)ccg$l_4y
 
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
+
+urllib3.disable_warnings()  # TODO Remove in prod
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
