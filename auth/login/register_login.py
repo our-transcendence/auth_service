@@ -1,15 +1,13 @@
 # Standard library imports
-from datetime import datetime, timedelta
+from datetime import timedelta
 import base64
 import binascii
 import json
-import os
 
 # Django imports
 from django.contrib.auth import hashers
 from django.core import exceptions
 from django.db import OperationalError, IntegrityError, DataError
-from django.forms.models import model_to_dict
 from django.http import response, HttpRequest, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -20,11 +18,10 @@ from django.views.decorators.http import require_POST, require_GET
 
 # Local application/library specific imports
 from login.models import User
-from . import crypto
 from .utils import send_new_user
+from .cookie import return_auth_cookie, return_refresh_token
 
 import ourJWT.OUR_exception
-
 
 
 # Create your views here.

@@ -12,18 +12,17 @@ from django.views.decorators.http import require_POST, require_http_methods
 
 # Third-party imports
 import pyotp
-import requests
 
 # Local application/library specific imports
 from login.models import User
-from . import crypto
 from .utils import get_user_from_jwt
-from .reg
+from .cookie import return_refresh_token
 import ourJWT.OUR_exception
+
 
 @csrf_exempt
 @ourJWT.Decoder.check_auth()
-@require_http_methods("PATCH")
+@require_http_methods(["PATCH"])
 def set_totp(request: HttpRequest, **kwargs):
     try:
         user = get_user_from_jwt(kwargs)

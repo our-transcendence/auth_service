@@ -1,36 +1,25 @@
 # Standard library imports
-from datetime import datetime, timedelta
-import base64
-import binascii
 import json
-import os
-
-# Django imports
-from django.conf import settings
-from django.contrib.auth import hashers
-from django.core import exceptions
-from django.db import OperationalError, IntegrityError, DataError
-from django.forms.models import model_to_dict
-from django.http import response, HttpRequest, Http404
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST, require_GET, require_http_methods
 
 # Third-party imports
-import pyotp
 import requests
+# Django imports
+from django.conf import settings
+from django.http import response
+from django.shortcuts import get_object_or_404
+from django.views.decorators.http import require_GET
 
 # Local application/library specific imports
 from login.models import User
 from . import crypto
-import ourJWT.OUR_exception
+
 
 def get_user_from_jwt(kwargs):
     auth = kwargs["token"]
     key = auth["id"]
     user = get_object_or_404(User, pk=key)
     return user
+
 
 def send_new_user(new_user: User, user_data: dict):
     new_user_id = new_user.id
@@ -63,6 +52,7 @@ def send_new_user(new_user: User, user_data: dict):
         return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
 
     return update_response
+
 
 @require_GET
 def pubkey_retrieval(request):

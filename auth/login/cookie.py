@@ -1,31 +1,19 @@
 # Standard library imports
-from datetime import datetime, timedelta
-import base64
-import binascii
-import json
 import os
+from datetime import datetime, timedelta
 
 # Django imports
-from django.contrib.auth import hashers
-from django.core import exceptions
-from django.db import OperationalError, IntegrityError, DataError
 from django.forms.models import model_to_dict
-from django.http import response, HttpRequest, Http404
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST, require_GET
-# Third-party imports
-
+from django.http import response
 
 # Local application/library specific imports
 from login.models import User
 from . import crypto
-from .utils import send_new_user
 
-import ourJWT.OUR_exception
+# Third-party imports
 
 duration = int(os.getenv("AUTH_LIFETIME", "10"))
+
 
 def return_auth_cookie(user: User, full_response: response.HttpResponse):
     user_dict = model_to_dict(user, exclude=["password",
