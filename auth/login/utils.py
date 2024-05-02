@@ -7,11 +7,9 @@ import requests
 from django.conf import settings
 from django.http import response
 from django.shortcuts import get_object_or_404
-from django.views.decorators.http import require_GET
 
 # Local application/library specific imports
 from login.models import User
-from . import crypto
 
 
 def get_user_from_jwt(kwargs):
@@ -52,8 +50,3 @@ def send_new_user(new_user: User, user_data: dict):
         return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
 
     return update_response
-
-
-@require_GET
-def pubkey_retrieval(request):
-    return response.HttpResponse(crypto.PUBKEY)

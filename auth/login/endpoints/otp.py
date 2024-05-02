@@ -15,8 +15,8 @@ import pyotp
 
 # Local application/library specific imports
 from login.models import User
-from .utils import get_user_from_jwt
-from .cookie import return_refresh_token
+from ..utils import get_user_from_jwt
+from ..cookie import return_refresh_token
 import ourJWT.OUR_exception
 
 

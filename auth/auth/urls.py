@@ -19,7 +19,8 @@ from django.contrib import admin
 from django.urls import path
 
 # Local application/library specific imports
-from login import register_login, otp, utils
+from login import crypto
+from login.endpoints import register_login, otp, logout
 
 
 urlpatterns = [
@@ -27,7 +28,8 @@ urlpatterns = [
     path('login/', register_login.login_endpoint),
     path('register/', register_login.register_endpoint),
     path('refresh/', register_login.refresh_auth_token),
-    path('public_key/', utils.pubkey_retrieval),
+    path('public_key/', crypto.pubkey_retrieval),
     path('enable_totp/', otp.set_totp),
     path('otp/', otp.otp_submit)
+    path('otp/', otp.otp_submit),
 ]

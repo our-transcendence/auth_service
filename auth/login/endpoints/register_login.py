@@ -18,8 +18,8 @@ from django.views.decorators.http import require_POST, require_GET
 
 # Local application/library specific imports
 from login.models import User
-from .utils import send_new_user
-from .cookie import return_auth_cookie, return_refresh_token
+from ..utils import send_new_user
+from ..cookie import return_auth_cookie, return_refresh_token
 
 import ourJWT.OUR_exception
 
