@@ -19,15 +19,15 @@ from django.contrib import admin
 from django.urls import path
 
 # Local application/library specific imports
-from login import endpoint
+from login import register_login, otp, utils
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', endpoint.login_endpoint),
-    path('register/', endpoint.register_endpoint),
-    path('refresh/', endpoint.refresh_auth_token),
-    path('test/', endpoint.test_decorator),
-    path('public_key/', endpoint.pubkey_retrieval),
-    path('enable_totp/', endpoint.set_totp),
-    path('otp/', endpoint.otp_submit)
+    path('login/', register_login.login_endpoint),
+    path('register/', register_login.register_endpoint),
+    path('refresh/', register_login.refresh_auth_token),
+    path('public_key/', utils.pubkey_retrieval),
+    path('enable_totp/', otp.set_totp),
+    path('otp/', otp.otp_submit)
 ]
