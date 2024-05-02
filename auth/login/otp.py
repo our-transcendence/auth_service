@@ -36,9 +36,9 @@ def set_totp(request: HttpRequest, **kwargs):
     user.login_attempt = timezone.now()
     user.save()
     response_content = {"totp_key": user.totp_key,
-                        "Key Uri Format":
+                        "uri_key":
                             f"otpauth://totp/OUR_Transcendence:{user.login}"
-                            "?secret={user.totp_key}"
+                            f"?secret={user.totp_key}"
                             "&issuer=OUR_Transcendence-auth"}
     return response.JsonResponse(response_content, status=202, reason="Expecting OTP")
 
