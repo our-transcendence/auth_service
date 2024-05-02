@@ -30,6 +30,7 @@ urlpatterns = [
     path('refresh/', register_login.refresh_auth_token),
     path('public_key/', crypto.pubkey_retrieval),
     path('enable_totp/', otp.set_totp),
-    path('otp/', otp.otp_submit)
     path('otp/', otp.otp_submit),
+    path('logout/', logout.logout_here),
+    path('logout_all/', logout.logout_everywhere)
 ]
