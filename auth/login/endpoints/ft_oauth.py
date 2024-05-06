@@ -115,7 +115,7 @@ def get_42_login(access_token):
         profile_request_header = {"Authorization": f"Bearer {access_token}"}
         profile_response = requests.get("https://api.intra.42.fr/v2/me", headers=profile_request_header)
     except requests.exceptions.RequestException:
-        return None, response.HttpResponse(status=500, reason="Cant connect to 42 api")
+        return None, response.HttpResponse(status=408, reason="Cant connect to 42 api")
 
     if profile_response.status_code != 200:
         return None, response.HttpResponse(status=profile_response.status_code,
