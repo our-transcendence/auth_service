@@ -105,7 +105,10 @@ def link_42(request: HttpRequest, **kwargs):
         return http_error
 
     user.login_42 = login_42
-    # TODO: call User.save in a try except in case of DB failure
+    try:
+        user.save()
+    except e:
+        return response.HttpResponseBadRequest(reason=e)
     return response.HttpResponse(status=204, reason="42 account linked successfully")
 
 
