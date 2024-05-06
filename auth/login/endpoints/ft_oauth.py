@@ -1,8 +1,25 @@
+# Standard library imports
+import json
+
+import ourJWT.OUR_exception
+# Third-party imports
+import requests
+# Django imports
+from django.http import response, HttpRequest
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST, require_GET
+
+from auth import settings
+# Local application/library specific imports
+from login.models import User
+from ..cookie import return_refresh_token
+
 
 @csrf_exempt
 @require_GET
 def login_42_page(request: HttpRequest):
     return response.HttpResponse(settings.LOGIN_42_PAGE_URL)
+
 
 @csrf_exempt
 @require_GET
@@ -27,12 +44,16 @@ def token_42(request: HttpRequest):
     try:
         oauth_response = requests.post("https://api.intra.42.fr/oauth/token", data=post_data)
     except requests.exceptions.ConnectionError:
+        # TODO: No Error 500
         return response.HttpResponse(status=500, reason="Cant connect to 42 api")
     if oauth_response.status_code != 200:
-        return response.HttpResponse(status=oauth_response.status_code, reason=f"Error: {oauth_response.status_code}, {oauth_response.text}")
+        return response.HttpResponse(status=oauth_response.status_code,
+                                     reason=f"Error: {oauth_response.status_code}, {oauth_response.text}")
     access_token = oauth_response.json().get("access_token")
-    response_content = {"access_token" : access_token}
+    # TODO: Set access_token has cookie
+    response_content = {"access_token": access_token}
     return response.JsonResponse(response_content)
+
 
 @csrf_exempt
 @require_GET
@@ -47,9 +68,9 @@ def login_42_endpoint(request: HttpRequest):
         return response.HttpResponseBadRequest(reason=f"Bad Keys {data.keys()}, expecting {expected_keys}")
     access_token = data["access_token"]
 
-    login_42, httpError = get_42_login(access_token)
+    login_42, http_error = get_42_login(access_token)
     if login_42 is None:
-        return httpError
+        return http_error
 
     # search if login exists in database
     if not User.objects.filter(login_42=login_42).exists():
@@ -58,9 +79,11 @@ def login_42_endpoint(request: HttpRequest):
     user = User.objects.filter(login_42=login_42)[0]
     return return_refresh_token(user)
 
+
 @csrf_exempt
 @require_POST
-def link_42(request: HttpRequest):
+@ourJWT.Decoder.check_auth()
+def link_42(request: HttpRequest, **kwargs):
     # check access_token
     try:
         data = json.loads(request.body)
@@ -73,6 +96,7 @@ def link_42(request: HttpRequest):
     access_token = data["access_token"]
 
     # check auth_token for our_transcendence
+    # TODO: get auth token from kwargs
     try:
         request.COOKIES["auth_token"]
     except KeyError:
@@ -89,13 +113,14 @@ def link_42(request: HttpRequest):
     if user.login_42 is not None:
         return response.HttpResponseBadRequest(reason="There is already a 42 account associated with this account")
 
-
-    login_42, httpError = get_42_login(access_token)
+    login_42, http_error = get_42_login(access_token)
     if login_42 is None:
-        return httpError
+        return http_error
 
     user.login_42 = login_42
-    return response.HttpResponseOK()
+    # TODO: call User.save in a try except in case of DB failure
+    return response.HttpResponse(status=204, reason="42 account linked successfully")
+
 
 def get_42_login(access_token):
     # try request to api with the token
@@ -106,7 +131,8 @@ def get_42_login(access_token):
         return None, response.HttpResponse(status=500, reason="Cant connect to 42 api")
 
     if profile_response.status_code != 200:
-        return None, response.HttpResponse(status=profile_response.status_code, reason=f"Error: {profile_response.status_code}")
+        return None, response.HttpResponse(status=profile_response.status_code,
+                                           reason=f"Error: {profile_response.status_code}")
     # get the login
     try:
         data = json.loads(profile_response.text)
