@@ -1,16 +1,27 @@
+# Standard library imports
 from datetime import datetime, timedelta
 
+# Django imports
 from django.db import models
 from django.core.validators import MinLengthValidator
 
-from .crypto import encoder
-
+# Third-party imports
 import pyotp
 
+# Local application/library specific imports
+from .crypto import encoder
+
 # Create your models here.
+
+
 class User(models.Model):
     id = models.BigAutoField(primary_key=True)
     login = models.CharField(max_length=15, unique=True)
+    displayName = models.CharField(
+        max_length=25,
+        validators=[MinLengthValidator(5, "Must contains at least 5 char")],
+        null=True
+    )
     password = models.CharField(
         max_length=256,
         validators=[MinLengthValidator(5, "Must contains at least 5 char")]

@@ -1,6 +1,14 @@
+# Standard library imports
+
+# Django imports
+from django.http import response
+from django.views.decorators.http import require_GET
+
+# Third-party imports
 from cryptography.hazmat.primitives.asymmetric import rsa
 from cryptography.hazmat.primitives import serialization
 
+# Local application/library specific imports
 from ourJWT import OUR_class, OUR_exception
 
 
@@ -26,7 +34,6 @@ def keygen():
 
 PRIVKEY, PUBKEY = keygen()
 
-
 encoder: OUR_class.Encoder
 OUR_class.Decoder.pub_key = PUBKEY
 
@@ -36,3 +43,8 @@ try:
 except OUR_exception.NoKey:
     print("NO KEY ERROR")
     exit()
+
+
+@require_GET
+def pubkey_retrieval(request):
+    return response.HttpResponse(PUBKEY)

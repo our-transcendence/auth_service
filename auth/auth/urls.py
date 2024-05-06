@@ -12,21 +12,27 @@ Class-based views
     2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
 Including another URLconf
     1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
+    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls')
 """
+# Django imports
 from django.contrib import admin
 from django.urls import path
-from login import endpoint
+
+# Local application/library specific imports
+from login import crypto
+from login.endpoints import register_login, otp, logout
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('login/', endpoint.login_endpoint),
-    path('register/', endpoint.register_endpoint),
-    path('refresh/', endpoint.refresh_auth_token),
-    path('test/', endpoint.test_decorator),
-    path('public_key/', endpoint.pubkey_retrieval),
-    path('enable_totp/', endpoint.set_totp),
-    path('otp/', endpoint.otp_submit),
+    path('login/', register_login.login_endpoint),
+    path('register/', register_login.register_endpoint),
+    path('refresh/', register_login.refresh_auth_token),
+    path('public_key/', crypto.pubkey_retrieval),
+    path('enable_totp/', otp.set_totp),
+    path('otp/', otp.otp_submit),
+    path('logout/', logout.logout_here),
+    path('logout_all/', logout.logout_everywhere),
     path('login_42_page/', endpoint.login_42_page),
     path('token_42/', endpoint.token_42),
     path('login_42/', endpoint.login_42_endpoint),

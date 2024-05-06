@@ -1,4 +1,4 @@
-#docker run -e POSTGRES_PASSWORD=PASSWORD -e POSTGRES_USER=USER -e POSTGRES_DB=DB -p 5432:5432 postgres
+# docker run -e POSTGRES_PASSWORD=PASSWORD -e POSTGRES_USER=USER -e POSTGRES_DB=DB -p 5432:5432 postgres
 
 """
 Django settings for auth project.
@@ -11,9 +11,17 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
 """
+# Standard library imports
 import os
+import re
+import urllib3
 from pathlib import Path
 
+# Django imports
+
+# Third-party imports
+
+# Local application/library specific imports
 from ourJWT import OUR_class, OUR_exception
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -28,6 +36,8 @@ SECRET_KEY = 'django-insecure-bha_z48$lrtojju%5*y5y399k@f%c5!dnu80pbm7u)ccg$l_4y
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 
+urllib3.disable_warnings()  # TODO Remove in prod
+
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
@@ -35,7 +45,10 @@ ALLOWED_HOSTS = [
     '82.64.223.220',
     '127.0.0.1',
     'localhost',
-    'auth-nginx'
+    'auth-nginx',
+    'user-nginx',
+    'chat-nginx',
+    'history-nginx'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -43,8 +56,13 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     "http://localhost",
     "https://localhost",
-	"https://127.0.0.1:4443",
-	"https://localhost:4443",
+    "https://127.0.0.1:4443",
+    "https://localhost:4443",
+]
+
+CORS_ORIGIN_REGEX_WHITELIST = [
+    r"^https://127\.0\.0\.1:\d+$",
+    r"^https://localhost:\d+$",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = DEBUG
@@ -100,14 +118,12 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.environ.get("POSTGRES_DB", "DB"),
-        'HOST': "localhost",
+        'HOST': "postgres",
         "USER": os.environ.get("POSTGRES_USER", "USER"),
         "PASSWORD": os.environ.get("POSTGRES_PASSWORD", "PASSWORD"),
         "PORT": "5432",
     }
 }
-
-
 
 # Password validation
 # https://docs.djangoproject.com/en/4.2/ref/settings/#auth-password-validators
