@@ -107,6 +107,17 @@ def otp_login(request: HttpRequest):
         return response.HttpResponse(status=400, reason="Database Failure")
     return return_refresh_token(user)
 
+@ourJWT.Decoder.check_auth()
+def otp_enable(request: HttpRequest, **kwargs):
+    try:
+        user = get_user_from_jwt(kwargs)
+    except Http404:
+        return response.HttpResponseBadRequest("No user found with given ID")
+
+    if user.totp_enabled:
+        # TODO finish here
+
+
 def check_otp(user: User, otp: str):
     if (user.login_attempt + timedelta(minutes=1)) < timezone.now():
         return False, response.HttpResponseForbidden(reason="OTP validation timed out")
