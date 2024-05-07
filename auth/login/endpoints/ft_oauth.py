@@ -1,19 +1,22 @@
 # Standard library imports
 import json
-
-import ourJWT.OUR_exception
 # Third-party imports
 import requests
+
 # Django imports
+from django.db import IntegrityError, OperationalError
 from django.http import response, HttpRequest, Http404
+from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 
-from auth import settings
 # Local application/library specific imports
+import ourJWT.OUR_exception
 from login.models import User
 from ..utils import get_user_from_jwt
 from ..cookie import return_refresh_token
+from auth import settings
+
 
 @csrf_exempt
 @require_GET
@@ -63,9 +66,9 @@ def login_42_endpoint(request: HttpRequest):
         return http_error
 
     try:
-        user: User = User.objects.get(login_42__exact=login_42)
-    except User.DoesNotExist:
-        return response.HttpResponseBadRequest(reason="There is no account associated with this 42 account")
+        user: User = get_object_or_404(User, login_42=login_42)
+    except Http404:
+        return response.HttpResponseNotFound(reason="There is no account associated with this 42 account")
     return return_refresh_token(user)
 
 
@@ -73,30 +76,15 @@ def login_42_endpoint(request: HttpRequest):
 @require_POST
 @ourJWT.Decoder.check_auth()
 def link_42(request: HttpRequest, **kwargs):
-    # check access_token
     access_token = request.COOKIES.get("access_token")
     if access_token is None:
         return response.HttpResponseBadRequest(reason="no 42 token in request")
 
-    # check auth_token for our_transcendence
-    # TODO: get auth token from kwargs
     try:
         user = get_user_from_jwt(kwargs)
     except Http404:
         return response.HttpResponseBadRequest(reason="no user corresponding to auth token")
-    try:
-        request.COOKIES["auth_token"]
-    except KeyError:
-        return response.HttpResponseBadRequest(reason="no auth token")
-    try:
-        auth = ourJWT.Decoder.decode(request.COOKIES.get("auth_token"), check_date=False)
-    except (ourJWT.BadSubject, ourJWT.RefusedToken):
-        return response.HttpResponseBadRequest(reason='bad auth token')
-    auth_login = auth.get("login")
 
-    if not User.objects.filter(login=auth_login).exists():
-        return response.HttpResponseBadRequest(reason="There is no account associated with this 42 account")
-    user = User.objects.filter(login=User.objects.filter(login=auth_login))[0]
     if user.login_42 is not None:
         return response.HttpResponseBadRequest(reason="There is already a 42 account associated with this account")
 
@@ -105,7 +93,12 @@ def link_42(request: HttpRequest, **kwargs):
         return http_error
 
     user.login_42 = login_42
-    # TODO: call User.save in a try except in case of DB failure
+    try:
+        user.save()
+    except (IntegrityError, OperationalError) as e:
+        print(f"DATABASE FAILURE {e}")
+        return response.HttpResponse(status=503, reason="Database Failure")
+
     return response.HttpResponse(status=204, reason="42 account linked successfully")
 
 
@@ -125,5 +118,7 @@ def get_42_login(access_token):
         data = json.loads(profile_response.text)
     except json.JSONDecodeError:
         return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
-    login_42 = data["login"]
+    login_42 = data.get("login")
+    if login_42 is None:
+        return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
     return login_42, None

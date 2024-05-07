@@ -33,7 +33,7 @@ urlpatterns = [
     path('logout/', logout.logout_here),
     path('logout_all/', logout.logout_everywhere),
     path('login_42_page/', ft_oauth.login_42_page),
-    path('token_42/', ft_oauth.token_42),
+    path('token_42/', ft_oauth.get_token_42),
     path('login_42/', ft_oauth.login_42_endpoint),
     path('link_42/', ft_oauth.link_42)
 ]
