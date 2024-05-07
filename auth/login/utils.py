@@ -50,3 +50,25 @@ def send_new_user(new_user: User, user_data: dict):
         return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
 
     return update_response
+
+
+def get_42_login_from_token(access_token):
+    # try request to api with the token
+    try:
+        profile_request_header = {"Authorization": f"Bearer {access_token}"}
+        profile_response = requests.get("https://api.intra.42.fr/v2/me", headers=profile_request_header)
+    except requests.exceptions.RequestException:
+        return None, response.HttpResponse(status=500, reason="Cant connect to 42 api")
+
+    if profile_response.status_code != 200:
+        return None, response.HttpResponse(status=profile_response.status_code,
+                                           reason=f"Error: {profile_response.status_code}")
+    # get the login
+    try:
+        data = json.loads(profile_response.text)
+    except json.JSONDecodeError:
+        return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
+    login_42 = data.get("login")
+    if login_42 is None:
+        return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
+    return login_42, None

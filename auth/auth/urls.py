@@ -20,8 +20,7 @@ from django.urls import path
 
 # Local application/library specific imports
 from login import crypto
-from login.endpoints import register_login, otp, logout
-
+from login.endpoints import register_login, otp, logout, ft_oauth
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -32,5 +31,9 @@ urlpatterns = [
     path('enable_totp/', otp.set_totp),
     path('otp/', otp.otp_submit),
     path('logout/', logout.logout_here),
-    path('logout_all/', logout.logout_everywhere)
+    path('logout_all/', logout.logout_everywhere),
+    path('login_42_page/', ft_oauth.login_42_page),
+    path('token_42/', ft_oauth.get_token_42),
+    path('login_42/', ft_oauth.login_42_endpoint),
+    path('link_42/', ft_oauth.link_42)
 ]

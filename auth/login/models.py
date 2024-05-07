@@ -33,6 +33,7 @@ class User(models.Model):
                                 )
     login_attempt = models.DateTimeField(default=None, null=True, blank=True)
     totp_enabled = models.BooleanField(default=False)
+    login_42 = models.CharField(max_length=15, unique=True, null=True, blank=True)
 
     @property
     def totp_item(self):
