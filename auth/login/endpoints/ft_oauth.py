@@ -51,6 +51,7 @@ def get_token_42(request: HttpRequest):
     access_token = oauth_response.json().get("access_token")
     full_response = response.HttpResponse()
     full_response.set_cookie("access_token", access_token)
+    full_response.delete_cookie("code")
     return full_response
 
 
