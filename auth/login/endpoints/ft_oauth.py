@@ -100,3 +100,32 @@ def link_42(request: HttpRequest, **kwargs):
         return response.HttpResponse(status=503, reason="Database Failure")
 
     return response.HttpResponse(status=204, reason="42 account linked successfully")
+
+@csrf_exempt
+@require_POST
+@ourJWT.Decoder.check_auth()
+def unlink_42(request: HttpRequest, **kwargs):
+    access_token = request.COOKIES.get("access_token")
+    if access_token is None:
+        return response.HttpResponseBadRequest(reason="no 42 token in request")
+
+    try:
+        user = get_user_from_jwt(kwargs)
+    except Http404:
+        return response.HttpResponseBadRequest(reason="no user corresponding to auth token")
+
+    if user.login_42 is not None:
+        return response.HttpResponseBadRequest(reason="There is already a 42 account associated with this account")
+
+    login_42, http_error = get_42_login_from_token(access_token)
+    if login_42 is None:
+        return http_error
+
+    user.login_42 = None
+    try:
+        user.save()
+    except (IntegrityError, OperationalError) as e:
+        print(f"DATABASE FAILURE {e}")
+        return response.HttpResponse(status=503, reason="Database Failure")
+
+    return response.HttpResponse(status=204, reason="42 account unlinked successfully")
