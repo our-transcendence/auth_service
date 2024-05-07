@@ -52,5 +52,5 @@ def logout_everywhere(request: HttpRequest, **kwargs):
         user.save()
     except (IntegrityError, OperationalError) as e:
         print(f"DATABASE FAILURE {e}")
-        return response.HttpResponse(status=400, reason="Database Failure")
+        return response.HttpResponse(status=503, reason="Database Failure")
     return logout_response

@@ -55,7 +55,7 @@ def register_endpoint(request: HttpRequest):
         new_user.save()
     except (IntegrityError, OperationalError) as e:
         print(e, flush=True)
-        return response.HttpResponse(status=400, reason="Database Failure")
+        return response.HttpResponse(status=503, reason="Database Failure")
 
     try:
         new_user.clean_fields()
@@ -73,7 +73,7 @@ def register_endpoint(request: HttpRequest):
     except (IntegrityError, OperationalError) as e:
         print(f"DATABASE FAILURE {e}")
         # TODO: Send a request to delete user from user-service
-        return response.HttpResponse(status=400, reason="Database Failure")
+        return response.HttpResponse(status=503, reason="Database Failure")
 
     return return_refresh_token(new_user)
 
