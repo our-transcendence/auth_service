@@ -1,5 +1,5 @@
 # Standard library imports
-import json
+
 # Third-party imports
 import requests
 
@@ -13,7 +13,7 @@ from django.views.decorators.http import require_POST, require_GET
 # Local application/library specific imports
 import ourJWT.OUR_exception
 from login.models import User
-from ..utils import get_user_from_jwt
+from ..utils import get_user_from_jwt, get_42_login_from_token
 from ..cookie import return_refresh_token
 from auth import settings
 
@@ -61,7 +61,7 @@ def login_42_endpoint(request: HttpRequest):
     if access_token is None:
         return response.HttpResponseBadRequest(reason="no 42 token in request")
 
-    login_42, http_error = get_42_login(access_token)
+    login_42, http_error = get_42_login_from_token(access_token)
     if login_42 is None:
         return http_error
 
@@ -88,7 +88,7 @@ def link_42(request: HttpRequest, **kwargs):
     if user.login_42 is not None:
         return response.HttpResponseBadRequest(reason="There is already a 42 account associated with this account")
 
-    login_42, http_error = get_42_login(access_token)
+    login_42, http_error = get_42_login_from_token(access_token)
     if login_42 is None:
         return http_error
 
@@ -100,25 +100,3 @@ def link_42(request: HttpRequest, **kwargs):
         return response.HttpResponse(status=503, reason="Database Failure")
 
     return response.HttpResponse(status=204, reason="42 account linked successfully")
-
-
-def get_42_login(access_token):
-    # try request to api with the token
-    try:
-        profile_request_header = {"Authorization": f"Bearer {access_token}"}
-        profile_response = requests.get("https://api.intra.42.fr/v2/me", headers=profile_request_header)
-    except requests.exceptions.RequestException:
-        return None, response.HttpResponse(status=500, reason="Cant connect to 42 api")
-
-    if profile_response.status_code != 200:
-        return None, response.HttpResponse(status=profile_response.status_code,
-                                           reason=f"Error: {profile_response.status_code}")
-    # get the login
-    try:
-        data = json.loads(profile_response.text)
-    except json.JSONDecodeError:
-        return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
-    login_42 = data.get("login")
-    if login_42 is None:
-        return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
-    return login_42, None
