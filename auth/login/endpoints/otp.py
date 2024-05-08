@@ -126,15 +126,39 @@ def otp_login(request: HttpRequest):
 
 
 @ourJWT.Decoder.check_auth()
-def otp_enable(request: HttpRequest, **kwargs):
 def otp_activation(request: HttpRequest, **kwargs):
     try:
         user = get_user_from_jwt(kwargs)
     except Http404:
-        return response.HttpResponseBadRequest("No user found with given ID")
+        return otp_failure_handeling(*NO_USER)
 
     if user.totp_enabled:
-        # TODO finish here
+        return otp_failure_handeling(*ALREADY_2FA)
+
+    if user.totp_key is None:
+        return otp_failure_handeling(*NO_SET_OTP)
+
+    otp = get_otp_from_body(request.body)
+    if otp is None:
+        return otp_failure_handeling(*NO_OTP)
+
+    otp_status, otp_response = check_otp(user, otp)
+
+    if otp_status is False:
+        user.login_attempt = None
+        try:
+            user.save()
+        except (IntegrityError, OperationalError):
+            pass
+        return otp_failure_handeling(otp_response.status, otp_response.reason_phrase)
+
+    user.totp_enabled = True
+    user.login_attempt = None
+    try:
+        user.save()
+    except (IntegrityError, OperationalError):
+        return otp_failure_handeling(*FAILED_DB)
+    return response.HttpResponse()
 
 
 def check_otp(user: User, otp: str):
