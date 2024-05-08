@@ -47,22 +47,11 @@ def set_totp(request: HttpRequest, **kwargs):
                             f"otpauth://totp/OUR_Transcendence:{user.login}"
                             f"?secret={user.totp_key}"
                             "&issuer=OUR_Transcendence-auth"}
-    return response.JsonResponse(response_content, *OTP_EXPECTING)
-
-
-@csrf_exempt
-@require_POST
-def otp_submit(request: HttpRequest):
-    reason = request.COOKIES.get("otp_status")
-    match reason:
-        case "otp_login":
-            return otp_login(request)
-        case "otp_enable":
-            return otp_activation(request)
-        case "otp_disable":
-            return otp_disable(request)
-        case _:
-            return response.HttpResponseBadRequest("no reason given for otp")
+    need_otp_response = response.JsonResponse(response_content, *OTP_EXPECTING)
+    need_otp_response.set_cookie(key="otp_status",
+                                 value="otp_enable",
+                                 max_age=timedelta(seconds=120),
+                                 httponly=True)
 
 
 @csrf_exempt
@@ -79,8 +68,27 @@ def remove_totp(request: HttpRequest, **kwargs):
 
     user.login_attempt = timezone.now()
     user.save()  # TODO: protect this in all file
-    # TODO: add the otp_status cookie
-    return response.HttpResponse(*OTP_EXPECTING)
+    need_otp_response =  response.HttpResponse(*OTP_EXPECTING)
+    need_otp_response.set_cookie(key="otp_status",
+                                 value="otp_disable",
+                                 max_age=timedelta(seconds=120),
+                                 httponly=True)
+    return need_otp_response
+
+
+@csrf_exempt
+@require_POST
+def otp_submit(request: HttpRequest):
+    reason = request.COOKIES.get("otp_status")
+    match reason:
+        case "otp_login":
+            return otp_login(request)
+        case "otp_enable":
+            return otp_activation(request)
+        case "otp_disable":
+            return otp_disable(request)
+        case _:
+            return response.HttpResponseBadRequest("no reason given for otp")
 
 
 def otp_login(request: HttpRequest):
@@ -119,6 +127,7 @@ def otp_login(request: HttpRequest):
 
 @ourJWT.Decoder.check_auth()
 def otp_enable(request: HttpRequest, **kwargs):
+def otp_activation(request: HttpRequest, **kwargs):
     try:
         user = get_user_from_jwt(kwargs)
     except Http404:
