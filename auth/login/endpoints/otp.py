@@ -152,7 +152,7 @@ def otp_activation_backend(request: HttpRequest, **kwargs):
             user.save()
         except (IntegrityError, OperationalError):
             pass
-        return otp_failure_handling(otp_response.status, otp_response.reason_phrase)
+        return otp_failure_handling(otp_response.status_code, otp_response.reason_phrase)
 
     user.totp_enabled = True
     user.login_attempt = None
@@ -185,7 +185,7 @@ def otp_disable_backend(request: HttpRequest, **kwargs):
             user.save()
         except (IntegrityError, OperationalError):
             pass
-        return otp_failure_handling(otp_response.status, otp_response.reason_phrase)
+        return otp_failure_handling(otp_response.status_code, otp_response.reason_phrase)
 
     user.totp_enabled = False
     user.login_attempt = None
