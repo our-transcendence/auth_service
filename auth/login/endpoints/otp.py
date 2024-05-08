@@ -47,7 +47,8 @@ def set_totp_endpoint(request: HttpRequest, **kwargs):
                             f"otpauth://totp/OUR_Transcendence:{user.login}"
                             f"?secret={user.totp_key}"
                             "&issuer=OUR_Transcendence-auth"}
-    need_otp_response = response.JsonResponse(response_content, *OTP_EXPECTING)
+    need_otp_response = response.JsonResponse(response_content)
+    need_otp_response.status_code, need_otp_response.reason_phrase = OTP_EXPECTING
     need_otp_response.set_cookie(key="otp_status",
                                  value="otp_enable",
                                  max_age=timedelta(seconds=120),
