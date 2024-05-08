@@ -117,6 +117,10 @@ def login_endpoint(request: HttpRequest):
                                  value=user.id,
                                  httponly=True,
                                  max_age=timedelta(seconds=60))
+    need_otp_response.set_cookie(key="otp_status",
+                                 value="otp_login",
+                                 max_age=timedelta(seconds=120),
+                                 httponly=True)
     return need_otp_response
 
 
