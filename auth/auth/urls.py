@@ -25,12 +25,21 @@ from login.endpoints import register_login, otp, logout
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # login/logout endpoints
     path('login/', register_login.login_endpoint),
     path('register/', register_login.register_endpoint),
     path('refresh/', register_login.refresh_auth_token),
+
+    # Service endpoints
     path('public_key/', crypto.pubkey_retrieval),
-    path('enable_totp/', otp.set_totp),
-    path('otp/', otp.otp_submit),
+
+    # OTP endpoints
+    path('enable_totp/', otp.set_totp_endpoint),
+    path('disable_totp/', otp.remove_totp_endpoint),
+    path('otp/', otp.otp_submit_endpoint),
+
+    # Logout endpoints
     path('logout/', logout.logout_here),
     path('logout_all/', logout.logout_everywhere)
 ]

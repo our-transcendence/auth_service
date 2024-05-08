@@ -30,7 +30,7 @@ OTP_EXPECTING = 202, "Expecting otp"
 @csrf_exempt
 @ourJWT.Decoder.check_auth()
 @require_http_methods(["PATCH"])
-def set_totp(request: HttpRequest, **kwargs):
+def set_totp_endpoint(request: HttpRequest, **kwargs):
     try:
         user = get_user_from_jwt(kwargs)
     except Http404:
@@ -52,12 +52,13 @@ def set_totp(request: HttpRequest, **kwargs):
                                  value="otp_enable",
                                  max_age=timedelta(seconds=120),
                                  httponly=True)
+    return need_otp_response
 
 
 @csrf_exempt
 @ourJWT.Decoder.check_auth()
 @require_http_methods(["PATCH"])
-def remove_totp(request: HttpRequest, **kwargs):
+def remove_totp_endpoint(request: HttpRequest, **kwargs):
     try:
         user: User = get_user_from_jwt(kwargs)
     except Http404:
@@ -68,7 +69,7 @@ def remove_totp(request: HttpRequest, **kwargs):
 
     user.login_attempt = timezone.now()
     user.save()  # TODO: protect this in all file
-    need_otp_response =  response.HttpResponse(*OTP_EXPECTING)
+    need_otp_response = response.HttpResponse(*OTP_EXPECTING)
     need_otp_response.set_cookie(key="otp_status",
                                  value="otp_disable",
                                  max_age=timedelta(seconds=120),
@@ -78,20 +79,20 @@ def remove_totp(request: HttpRequest, **kwargs):
 
 @csrf_exempt
 @require_POST
-def otp_submit(request: HttpRequest):
+def otp_submit_endpoint(request: HttpRequest):
     reason = request.COOKIES.get("otp_status")
     match reason:
         case "otp_login":
-            return otp_login(request)
+            return otp_login_backend(request)
         case "otp_enable":
-            return otp_activation(request)
+            return otp_activation_backend(request)
         case "otp_disable":
-            return otp_disable(request)
+            return otp_disable_backend(request)
         case _:
             return response.HttpResponseBadRequest("no reason given for otp")
 
 
-def otp_login(request: HttpRequest):
+def otp_login_backend(request: HttpRequest):
     user_id = request.COOKIES.get("otp_user_ID")
     if user_id is None:
         return response.HttpResponseBadRequest()
@@ -126,21 +127,21 @@ def otp_login(request: HttpRequest):
 
 
 @ourJWT.Decoder.check_auth()
-def otp_activation(request: HttpRequest, **kwargs):
+def otp_activation_backend(request: HttpRequest, **kwargs):
     try:
         user = get_user_from_jwt(kwargs)
     except Http404:
-        return otp_failure_handeling(*NO_USER)
+        return otp_failure_handling(*NO_USER)
 
     if user.totp_enabled:
-        return otp_failure_handeling(*ALREADY_2FA)
+        return otp_failure_handling(*ALREADY_2FA)
 
     if user.totp_key is None:
-        return otp_failure_handeling(*NO_SET_OTP)
+        return otp_failure_handling(*NO_SET_OTP)
 
     otp = get_otp_from_body(request.body)
     if otp is None:
-        return otp_failure_handeling(*NO_OTP)
+        return otp_failure_handling(*NO_OTP)
 
     otp_status, otp_response = check_otp(user, otp)
 
@@ -150,22 +151,55 @@ def otp_activation(request: HttpRequest, **kwargs):
             user.save()
         except (IntegrityError, OperationalError):
             pass
-        return otp_failure_handeling(otp_response.status, otp_response.reason_phrase)
+        return otp_failure_handling(otp_response.status, otp_response.reason_phrase)
 
     user.totp_enabled = True
     user.login_attempt = None
     try:
         user.save()
     except (IntegrityError, OperationalError):
-        return otp_failure_handeling(*FAILED_DB)
+        return otp_failure_handling(*FAILED_DB)
+    return response.HttpResponse()
+
+
+@ourJWT.Decoder.check_auth()
+def otp_disable_backend(request: HttpRequest, **kwargs):
+    try:
+        user = get_user_from_jwt(kwargs)
+    except Http404:
+        return otp_failure_handling(*NO_USER)
+
+    if user.totp_enabled is False:
+        return otp_failure_handling(*NO_SET_OTP)
+
+    otp = get_otp_from_body(request.body)
+    if otp is None:
+        return otp_failure_handling(*NO_OTP)
+
+    otp_status, otp_response = check_otp(user, otp)
+
+    if otp_status is False:
+        user.login_attempt = None
+        try:
+            user.save()
+        except (IntegrityError, OperationalError):
+            pass
+        return otp_failure_handling(otp_response.status, otp_response.reason_phrase)
+
+    user.totp_enabled = False
+    user.login_attempt = None
+    try:
+        user.save()
+    except (IntegrityError, OperationalError):
+        return otp_failure_handling(*FAILED_DB)
     return response.HttpResponse()
 
 
 def check_otp(user: User, otp: str):
     if (user.login_attempt + timedelta(minutes=1)) < timezone.now():
-        return False, otp_failure_handeling(403, "OTP validation timed out")
+        return False, otp_failure_handling(403, "OTP validation timed out")
     if user.totp_item.verify(otp) is False:
-        return False, otp_failure_handeling(403, "Bad OTP")
+        return False, otp_failure_handling(403, "Bad OTP")
     return True, None
 
 
@@ -177,7 +211,7 @@ def get_otp_from_body(body: HttpRequest.body):
     return otp
 
 
-def otp_failure_handeling(code: int, reason: str):
+def otp_failure_handling(code: int, reason: str):
     response_object = response.HttpResponse(status=code, reason=reason)
     response_object.delete_cookie("otp_status")
     return response_object
