@@ -1,5 +1,6 @@
 # Standard library imports
 import json
+from datetime import datetime, timedelta
 
 # Third-party imports
 import requests
@@ -7,10 +8,13 @@ import requests
 from django.conf import settings
 from django.http import response
 from django.shortcuts import get_object_or_404
+from django.forms.models import model_to_dict
+
 
 # Local application/library specific imports
 from login.models import User
-
+from login.cookie import duration
+from . import crypto
 
 def get_user_from_jwt(kwargs):
     auth = kwargs["token"]
@@ -36,11 +40,21 @@ def send_new_user(new_user: User, user_data: dict):
         return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
 
     update_request_data = {"display_name": user_data["display_name"]}
+    user_dict = model_to_dict(new_user, exclude=["password",
+                                             "totp_key",
+                                             "login_attempt",
+                                             "totp_enabled"])
+    expdate = datetime.now() + timedelta(minutes=duration)
+    user_dict["exp"] = expdate
+    payload = crypto.encoder.encode(user_dict, "auth")
+    update_request_cookie = {'refresh_token' : new_user.generate_refresh_token,
+                             'auth_token' : payload}
 
     try:
         update_response = requests.post(f"{settings.USER_SERVICE_URL}/{new_user_id}/update",
                                         data=json.dumps(update_request_data),
                                         headers=headers,
+                                        cookies=update_request_cookie
                                         verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e)
