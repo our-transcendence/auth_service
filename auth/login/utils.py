@@ -25,7 +25,9 @@ def get_user_from_jwt(kwargs):
 
 def send_new_user(new_user: User, user_data: dict):
     new_user_id = new_user.id
-    create_request_data = {"id": new_user_id, "login": user_data["login"]}
+    create_request_data = {"id": new_user_id,
+                           "login": user_data["login"],
+                           "display_name": user_data["display_name"]}
     headers = {'Content-Type': 'application/json'}
     try:
         create_response = requests.post(f"{settings.USER_SERVICE_URL}/register",
@@ -39,31 +41,7 @@ def send_new_user(new_user: User, user_data: dict):
     if create_response.status_code != 200:
         return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
 
-    update_request_data = {"display_name": user_data["display_name"]}
-    user_dict = model_to_dict(new_user, exclude=["password",
-                                             "totp_key",
-                                             "login_attempt",
-                                             "totp_enabled"])
-    expdate = datetime.now() + timedelta(minutes=duration)
-    user_dict["exp"] = expdate
-    payload = crypto.encoder.encode(user_dict, "auth")
-    update_request_cookie = {'refresh_token' : new_user.generate_refresh_token,
-                             'auth_token' : payload}
-
-    try:
-        update_response = requests.post(f"{settings.USER_SERVICE_URL}/{new_user_id}/update",
-                                        data=json.dumps(update_request_data),
-                                        headers=headers,
-                                        cookies=update_request_cookie
-                                        verify=False)
-    except requests.exceptions.ConnectionError as e:
-        print(e)
-        return response.HttpResponse(status=408, reason="Cant connect to user-service")
-
-    if update_response.status_code != 200:
-        return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
-
-    return update_response
+    return create_response
 
 
 def get_42_login_from_token(access_token):
