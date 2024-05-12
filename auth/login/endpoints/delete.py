@@ -29,4 +29,4 @@ NO_USER = 404, "No user found with given ID"
 @require_POST
 def delete_endpoint(request: HttpRequest, **kwargs):
    print("delete called", flush=True)
-   return
+   return response.HttpResponse()
