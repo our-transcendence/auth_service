@@ -26,7 +26,6 @@ import ourJWT.OUR_exception
 NO_USER = 404, "No user found with given ID"
 
 @csrf_exempt
-@require_POST
 def delete_endpoint(request: HttpRequest, **kwargs):
    print("delete called", flush=True)
    return response.HttpResponse()
