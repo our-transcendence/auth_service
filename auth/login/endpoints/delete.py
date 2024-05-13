@@ -24,10 +24,9 @@ from ..cookie import return_auth_cookie, return_refresh_token
 
 import ourJWT.OUR_exception
 
-
+NO_USER = 404, "No user found with given ID"
 
 @csrf_exempt
-@require_POST
 def delete_endpoint(request: HttpRequest, user_id):
     authorisation = request.headers.get("Authorization")
 
