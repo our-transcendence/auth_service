@@ -48,5 +48,5 @@ urlpatterns = [
     path('link_42/', ft_oauth.link_42),
     path('unlink_42/', ft_oauth.link_42),
 
-    path('delete/', delete.delete_endpoint)
+    path('delete/<int:user_id>/', delete.delete_endpoint)
 ]
