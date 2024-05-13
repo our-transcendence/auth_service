@@ -30,7 +30,7 @@ NO_USER = 404, "No user found with given ID"
 def delete_endpoint(request: HttpRequest, user_id):
     authorisation = request.headers.get("Authorization")
     print(f"key in authorization header: {authorisation}", flush=True)
-    print(f"key in env: {os.getenv("USER_TO_AUTH_KEY")}", flush=True)
+    print(f"key in env: {os.getenv('USER_TO_AUTH_KEY')}", flush=True)
     if authorisation is None or authorisation != os.getenv("USER_TO_AUTH_KEY"):
         return response.HttpResponseForbidden()
 
