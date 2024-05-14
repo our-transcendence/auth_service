@@ -26,7 +26,7 @@ def login_42_page(request: HttpRequest):
 
 
 @csrf_exempt
-@require_GET
+@require_POST
 def get_token_42(request: HttpRequest):
     try:
         data = json.loads(request.body)
