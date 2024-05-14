@@ -22,7 +22,7 @@ from auth import settings
 @require_GET
 # return the url to contact when asking for a 42 auth
 def login_42_page(request: HttpRequest):
-    return response.HttpResponse(settings.LOGIN_42_PAGE_URL)
+    return response.JsonResponse({"redirect": settings.LOGIN_42_PAGE_URL})
 
 
 @csrf_exempt
