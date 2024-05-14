@@ -17,6 +17,7 @@ from ..utils import get_user_from_jwt, get_42_login_from_token
 from ..cookie import return_refresh_token
 from auth import settings
 
+import json
 
 @csrf_exempt
 @require_GET
