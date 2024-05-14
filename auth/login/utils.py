@@ -1,5 +1,6 @@
 # Standard library imports
 import json
+from datetime import datetime, timedelta
 
 # Third-party imports
 import requests
@@ -7,10 +8,13 @@ import requests
 from django.conf import settings
 from django.http import response
 from django.shortcuts import get_object_or_404
+from django.forms.models import model_to_dict
+
 
 # Local application/library specific imports
 from login.models import User
-
+from login.cookie import duration
+from . import crypto
 
 def get_user_from_jwt(kwargs):
     auth = kwargs["token"]
@@ -21,7 +25,9 @@ def get_user_from_jwt(kwargs):
 
 def send_new_user(new_user: User, user_data: dict):
     new_user_id = new_user.id
-    create_request_data = {"id": new_user_id, "login": user_data["login"]}
+    create_request_data = {"id": new_user_id,
+                           "login": user_data["login"],
+                           "display_name": user_data["display_name"]}
     headers = {'Content-Type': 'application/json'}
     try:
         create_response = requests.post(f"{settings.USER_SERVICE_URL}/register",
@@ -35,21 +41,7 @@ def send_new_user(new_user: User, user_data: dict):
     if create_response.status_code != 200:
         return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
 
-    update_request_data = {"display_name": user_data["display_name"]}
-
-    try:
-        update_response = requests.post(f"{settings.USER_SERVICE_URL}/{new_user_id}/update",
-                                        data=json.dumps(update_request_data),
-                                        headers=headers,
-                                        verify=False)
-    except requests.exceptions.ConnectionError as e:
-        print(e)
-        return response.HttpResponse(status=408, reason="Cant connect to user-service")
-
-    if update_response.status_code != 200:
-        return response.HttpResponse(status=update_response.status_code, reason=update_response.text)
-
-    return update_response
+    return create_response
 
 
 def get_42_login_from_token(access_token):

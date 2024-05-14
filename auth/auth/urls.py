@@ -20,21 +20,33 @@ from django.urls import path
 
 # Local application/library specific imports
 from login import crypto
-from login.endpoints import register_login, otp, logout, ft_oauth
+from login.endpoints import register_login, otp, logout, ft_oauth, delete
+
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+
+    # login/logout endpoints
     path('login/', register_login.login_endpoint),
     path('register/', register_login.register_endpoint),
     path('refresh/', register_login.refresh_auth_token),
+
+    # Service endpoints
     path('public_key/', crypto.pubkey_retrieval),
-    path('enable_totp/', otp.set_totp),
-    path('otp/', otp.otp_submit),
+
+    # OTP endpoints
+    path('enable_totp/', otp.set_totp_endpoint),
+    path('disable_totp/', otp.remove_totp_endpoint),
+    path('otp/', otp.otp_submit_endpoint),
+
+    # Logout endpoints
     path('logout/', logout.logout_here),
     path('logout_all/', logout.logout_everywhere),
     path('login_42_page/', ft_oauth.login_42_page),
     path('token_42/', ft_oauth.get_token_42),
     path('login_42/', ft_oauth.login_42_endpoint),
     path('link_42/', ft_oauth.link_42),
-    path('unlink_42/', ft_oauth.link_42)
+    path('unlink_42/', ft_oauth.link_42),
+
+    path('delete/<int:user_id>/', delete.delete_endpoint)
 ]
