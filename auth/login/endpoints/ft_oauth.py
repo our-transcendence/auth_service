@@ -28,17 +28,22 @@ def login_42_page(request: HttpRequest):
 @csrf_exempt
 @require_GET
 def get_token_42(request: HttpRequest):
-    ft_code = request.COOKIES.get("code")
-    print(ft_code)
-    if ft_code is None:
-        return response.HttpResponseBadRequest(reason="no 42 oauth code in request")
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return response.HttpResponseBadRequest(reason="JSON Decode Error")
+
+    expected_keys = {"code"}
+    if set(data.keys()) != expected_keys:
+        return response.HttpResponseBadRequest(reason="Bad Keys")
+    code = data["code"]
 
     post_data = {
         "grant_type": "authorization_code",
         "client_id": settings.API_42_UID,
         "client_secret": settings.API_42_SECRET,
         "redirect_uri": settings.API_42_REDIRECT_URI,
-        "code": ft_code,
+        "code": code,
     }
 
     try:
