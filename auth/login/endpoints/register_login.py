@@ -65,6 +65,7 @@ def register_endpoint(request: HttpRequest):
 
     send: response.HttpResponse = send_new_user(new_user, user_data)
     if send.status_code != 200:
+        new_user.delete()
         return send
 
     try:

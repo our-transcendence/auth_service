@@ -39,7 +39,7 @@ def send_new_user(new_user: User, user_data: dict):
         return response.HttpResponse(status=408, reason="Cant connect to user-service")
 
     if create_response.status_code != 200:
-        return response.HttpResponse(status=create_response.status_code, reason=create_response.text)
+        print(f"{create_response.status_code}, {create_response.reason}", flush=True)
 
     return create_response
 
