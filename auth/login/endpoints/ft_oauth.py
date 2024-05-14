@@ -29,6 +29,7 @@ def login_42_page(request: HttpRequest):
 @require_GET
 def get_token_42(request: HttpRequest):
     ft_code = request.COOKIES.get("code")
+    print(ft_code)
     if ft_code is None:
         return response.HttpResponseBadRequest(reason="no 42 oauth code in request")
 
@@ -41,12 +42,12 @@ def get_token_42(request: HttpRequest):
     }
 
     try:
-        oauth_response = requests.post("https://api.intra.42.fr/oauth/token", data=post_data)
+        oauth_response = requests.post("https://api.intra.42.fr/oauth/token/", data=post_data)
     except requests.exceptions.ConnectionError:
         return response.HttpResponse(status=503, reason="Cant connect to 42 api")
     if oauth_response.status_code != 200:
         return response.HttpResponse(status=oauth_response.status_code,
-                                     reason=f"Error: {oauth_response.status_code}, {oauth_response.text}")
+                                     reason=f"Error from 42 API: {oauth_response.status_code}, {oauth_response.text}")
 
     access_token = oauth_response.json().get("access_token")
     full_response = response.HttpResponse()
