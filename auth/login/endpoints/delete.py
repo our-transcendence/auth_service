@@ -21,15 +21,15 @@ from django.views.decorators.http import require_POST, require_GET
 from login.models import User
 from ..utils import send_new_user, get_user_from_jwt
 from ..cookie import return_auth_cookie, return_refresh_token
+from .. import crypto
 
-import ourJWT.OUR_exception
 
 NO_USER = 404, "No user found with given ID"
 
 @csrf_exempt
 def delete_endpoint(request: HttpRequest, user_id):
     authorisation = request.headers.get("Authorization")
-    if authorisation is None or authorisation != os.getenv("USER_TO_AUTH_KEY"):
+    if authorisation is None or authorisation != crypto.SERVICE_KEY:
         return response.HttpResponseForbidden()
 
     try:
