@@ -30,7 +30,7 @@ def send_new_user(new_user: User, user_data: dict):
                            "display_name": user_data["display_name"]}
     headers = {'Content-Type': 'application/json'}
     try:
-        create_response = requests.post(f"{settings.USER_SERVICE_URL}/register",
+        create_response = requests.post(f"{settings.USER_SERVICE_URL}/register/",
                                         data=json.dumps(create_request_data),
                                         headers=headers,
                                         verify=False)
