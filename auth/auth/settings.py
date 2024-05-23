@@ -59,7 +59,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://localhost",
     "https://127.0.0.1:4443",
     "https://localhost:4443",
-    'our-transcendence.games'
+    'https://our-transcendence.games'
 ]
 
 CORS_ORIGIN_REGEX_WHITELIST = [
