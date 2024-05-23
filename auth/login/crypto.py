@@ -39,12 +39,18 @@ PRIVKEY, PUBKEY = keygen()
 encoder: OUR_class.Encoder
 OUR_class.Decoder.pub_key = PUBKEY
 
-try:
-    encoder = OUR_class.Encoder(PRIVKEY)
-    print("created both encoder and decoder object")
-except OUR_exception.NoKey:
-    print("NO KEY ERROR")
-    exit()
+
+from django.db.models.signals import post_migrate
+from django.dispatch import receiver
+
+@receiver(post_migrate)
+def create_encoder():
+    try:
+        encoder = OUR_class.Encoder(PRIVKEY)
+        print("created both encoder and decoder object")
+    except OUR_exception.NoKey:
+        print("NO KEY ERROR")
+        exit()
 
 
 @require_GET

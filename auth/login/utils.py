@@ -42,6 +42,7 @@ def send_new_user(new_user: User, user_data: dict):
 
     if user_response.status_code != 200:
         print(f"{user_response.status_code}, {user_response.reason}", flush=True)
+        return response.HttpResponse(status=user_response.status_code, reason=user_response.reason)
 
     # send new user to stats-service
     stats_request_data = {"display_name": user_data["display_name"]}
