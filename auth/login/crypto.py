@@ -44,7 +44,7 @@ from django.db.models.signals import post_migrate
 from django.dispatch import receiver
 
 @receiver(post_migrate)
-def create_encoder():
+def create_encoder(sender, **kwargs):
     try:
         encoder = OUR_class.Encoder(PRIVKEY)
         print("created both encoder and decoder object")
