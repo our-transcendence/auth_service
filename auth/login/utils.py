@@ -46,7 +46,7 @@ def send_new_user(new_user: User, user_data: dict):
     # send new user to stats-service
     stats_request_data = {"display_name": user_data["display_name"]}
     try:
-        stats_response = requests.post(f"{settings.STATS_SERVICE_URL}/{new_user_id}/register/",
+        stats_response = requests.post(f"{settings.STATS_SERVICE_URL}/{new_user_id}/register",
                                         data=json.dumps(stats_request_data),
                                         headers=headers,
                                         verify=False)
