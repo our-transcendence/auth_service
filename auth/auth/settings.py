@@ -48,7 +48,8 @@ ALLOWED_HOSTS = [
     'auth-nginx',
     'user-nginx',
     'chat-nginx',
-    'history-nginx'
+    'history-nginx',
+	'stats-nginx'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
