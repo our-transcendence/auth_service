@@ -55,7 +55,8 @@ def send_new_user(new_user: User, user_data: dict):
         return response.HttpResponse(status=408, reason="Cant connect to stats-service")
     if stats_response.status_code != 200:
         print(f"{stats_response.status_code}, {stats_response.reason}", flush=True)
-    return stats_response
+        return response.HttpResponse(status=stats_response.status_code, reason=stats_response.reason)
+    return response.HttpResponse()
 
 def get_42_login_from_token(access_token):
     # try request to api with the token
