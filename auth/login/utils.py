@@ -54,7 +54,7 @@ def send_new_user(new_user: User, user_data: dict):
     except requests.exceptions.ConnectionError as e:
         print(e)
         return response.HttpResponse(status=408, reason="Cant connect to stats-service")
-    if stats_response.status_code != 200:
+    if stats_response.status_code != 201:
         print(f"{stats_response.status_code}, {stats_response.reason}", flush=True)
         return response.HttpResponse(status=stats_response.status_code, reason=stats_response.reason)
     return response.HttpResponse()
