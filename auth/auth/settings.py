@@ -173,5 +173,6 @@ API_42_UID = os.getenv("API_42_UID", default="u-s4t2ud-7491e640b7fdd10f26272d296
 API_42_SECRET = os.getenv("API_42_SECRET", default="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")
 API_42_REDIRECT_URI = os.getenv("API_42_REDIRECT_URI", default="https://127.0.0.1:4443")
 
-USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "https://user-nginx:4646")
-STATS_SERVICE_URL = os.getenv("STATS_SERVICE_URL", "https://stats-nginx:5151")
+USER_SERVICE_URL = "https://user-nginx:4646"
+STATS_SERVICE_URL = "https://stats-nginx:5151"
+HISTORY_SERVICE_URL = "https://history-nginx:4646"
