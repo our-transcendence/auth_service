@@ -50,6 +50,7 @@ ALLOWED_HOSTS = [
     'chat-nginx',
     'history-nginx',
 	'stats-nginx',
+	'history-nginx',
     'our-transcendence.games'
 ]
 
