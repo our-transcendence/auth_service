@@ -61,7 +61,7 @@ def send_new_user(new_user: User, user_data: dict):
     # send new user to history-service
     history_request_data = {"display_name": user_data["display_name"], "player_id": new_user_id}
     try:
-        history_response = requests.post(f"{settings.STATS_SERVICE_URL}/stats/{new_user_id}/register",
+        history_response = requests.post(f"{settings.HISTORY_SERVICE_URL}/playerregister",
                                         data=json.dumps(history_request_data),
                                         headers=headers,
                                         verify=False)
