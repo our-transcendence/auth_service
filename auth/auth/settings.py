@@ -175,4 +175,4 @@ API_42_REDIRECT_URI = os.getenv("API_42_REDIRECT_URI", default="https://127.0.0.
 
 USER_SERVICE_URL = "https://user-nginx:4646"
 STATS_SERVICE_URL = "https://stats-nginx:5151"
-HISTORY_SERVICE_URL = "https://history-nginx:4646"
+HISTORY_SERVICE_URL = "https://history-nginx:4343"
