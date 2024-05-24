@@ -43,6 +43,7 @@ def send_new_user(new_user: User, user_data: dict):
     if user_response.status_code != 200:
         print(f"{user_response.status_code}, {user_response.reason}", flush=True)
         return response.HttpResponse(status=user_response.status_code, reason=user_response.reason)
+    print(f"User {new_user_id} sent to user-service", flush=True)
 
     # send new user to stats-service
     stats_request_data = {"display_name": user_data["display_name"]}
@@ -57,6 +58,7 @@ def send_new_user(new_user: User, user_data: dict):
     if stats_response.status_code != 201:
         print(f"{stats_response.status_code}, {stats_response.reason}", flush=True)
         return response.HttpResponse(status=stats_response.status_code, reason=stats_response.reason)
+    print(f"User {new_user_id} sent to stats-service", flush=True)
 
     # send new user to history-service
     history_request_data = {"display_name": user_data["display_name"], "player_id": new_user_id}
@@ -71,6 +73,7 @@ def send_new_user(new_user: User, user_data: dict):
     if history_response.status_code != 201:
         print(f"{history_response.status_code}, {history_response.reason}", flush=True)
         return response.HttpResponse(status=history_response.status_code, reason=history_response.reason)
+    print(f"User {new_user_id} sent to history-service", flush=True)
 
     return response.HttpResponse()
 
