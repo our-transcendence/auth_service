@@ -10,6 +10,7 @@ https://docs.djangoproject.com/en/4.2/topics/settings/
 
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.2/ref/settings/
+
 """
 # Standard library imports
 import os
@@ -30,6 +31,8 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.2/howto/deployment/checklist/
 
+APPEND_SLASH = False
+
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure-bha_z48$lrtojju%5*y5y399k@f%c5!dnu80pbm7u)ccg$l_4y'
 
@@ -48,7 +51,9 @@ ALLOWED_HOSTS = [
     'auth-nginx',
     'user-nginx',
     'chat-nginx',
-    'history-nginx'
+    'history-nginx',
+	'stats-nginx',
+    'our-transcendence.games'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
@@ -58,6 +63,7 @@ CORS_ALLOWED_ORIGINS = [
     "https://localhost",
     "https://127.0.0.1:4443",
     "https://localhost:4443",
+    'https://our-transcendence.games'
 ]
 
 CORS_ORIGIN_REGEX_WHITELIST = [
@@ -171,3 +177,4 @@ API_42_SECRET = os.getenv("API_42_SECRET", default="s-s4t2ud-a598a396dae9e2e933b
 API_42_REDIRECT_URI = os.getenv("API_42_REDIRECT_URI", default="https://127.0.0.1:4443")
 
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "https://user-nginx:4646")
+STATS_SERVICE_URL = os.getenv("STATS_SERVICE_URL", "https://stats-nginx:5151")

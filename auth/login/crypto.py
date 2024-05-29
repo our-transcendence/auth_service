@@ -1,4 +1,5 @@
 # Standard library imports
+import os
 
 # Django imports
 from django.http import response
@@ -11,6 +12,7 @@ from cryptography.hazmat.primitives import serialization
 # Local application/library specific imports
 from ourJWT import OUR_class, OUR_exception
 
+SERVICE_KEY = os.getenv("INTER_SERVICE_KEY")
 
 def keygen():
     private_key = rsa.generate_private_key(
