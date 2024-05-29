@@ -173,7 +173,9 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 # En production virer le default
 LOGIN_42_PAGE_URL = os.getenv("LOGIN_42_PAGE", default="https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-7491e640b7fdd10f26272d296dbcce3b9fbe47e2c9734cbbf0bf41513fd169ed&redirect_uri=https%3A%2F%2F127.0.0.1%3A4443&response_type=code")
 API_42_UID = os.getenv("API_42_UID", default="u-s4t2ud-7491e640b7fdd10f26272d296dbcce3b9fbe47e2c9734cbbf0bf41513fd169ed")
-API_42_SECRET = os.getenv("API_42_SECRET", default="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")
+API_42_SECRET = os.getenv("API_42_SECRET", default="default")
+if API_42_SECRET == "default":
+    raise Exception("API_42_SECRET must be defined")
 API_42_REDIRECT_URI = os.getenv("API_42_REDIRECT_URI", default="https://127.0.0.1:4443")
 
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "https://user-nginx:4646")
