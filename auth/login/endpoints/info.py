@@ -14,7 +14,7 @@ import ourJWT.OUR_exception
 
 @csrf_exempt
 @ourJWT.Decoder.check_auth()
-@require_POST
+@require_GET
 def get_info(request: HttpRequest, **kwargs):
     try:
         user = get_user_from_jwt(kwargs)
