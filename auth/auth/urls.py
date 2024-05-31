@@ -20,7 +20,7 @@ from django.urls import path
 
 # Local application/library specific imports
 from login import crypto
-from login.endpoints import register_login, otp, logout, ft_oauth, delete
+from login.endpoints import register_login, otp, logout, ft_oauth, delete, info
 
 
 urlpatterns = [
@@ -48,5 +48,7 @@ urlpatterns = [
     path('link_42/', ft_oauth.link_42),
     path('unlink_42/', ft_oauth.link_42),
 
+    # Info
+    path('info/', info.get_info),
     path('delete/<int:user_id>/', delete.delete_endpoint)
 ]
