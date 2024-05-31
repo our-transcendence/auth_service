@@ -49,6 +49,6 @@ urlpatterns = [
     path('unlink_42/', ft_oauth.link_42),
 
     # Info
-    path('info/', info.get_info),
+    path('infos/', info.get_info),
     path('delete/<int:user_id>/', delete.delete_endpoint)
 ]
