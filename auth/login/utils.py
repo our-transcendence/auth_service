@@ -60,6 +60,7 @@ def send_new_user(new_user: User, user_data: dict):
     return response.HttpResponse()
 
 def get_42_login_from_token(access_token):
+    print('get 42 login from token', flush=True)
     # try request to api with the token
     try:
         profile_request_header = {"Authorization": f"Bearer {access_token}"}
@@ -75,6 +76,7 @@ def get_42_login_from_token(access_token):
         data = json.loads(profile_response.text)
     except json.JSONDecodeError:
         return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
+    print(f'data fron 42 api : {data}', flush=True)
     login_42 = data.get("login")
     if login_42 is None:
         return None, response.HttpResponseBadRequest(reason="JSON Decode Error")

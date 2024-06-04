@@ -23,6 +23,7 @@ import json
 @require_GET
 # return the url to contact when asking for a 42 auth
 def login_42_page(request: HttpRequest):
+    print("login 42 reach", flush=True)
     return response.JsonResponse({"redirect": settings.LOGIN_42_PAGE_URL})
 
 
@@ -39,6 +40,7 @@ def get_token_42(request: HttpRequest):
         return response.HttpResponseBadRequest(reason="Bad Keys")
     code = data["code"]
 
+    print(f'get token code : {code}', flush=True)
     post_data = {
         "grant_type": "authorization_code",
         "client_id": settings.API_42_UID,
@@ -56,6 +58,7 @@ def get_token_42(request: HttpRequest):
                                      reason=f"Error from 42 API: {oauth_response.status_code}, {oauth_response.text}")
 
     access_token = oauth_response.json().get("access_token")
+    print(f'get token access_token : {access_token}', flush=True)
     full_response = response.HttpResponse()
     full_response.set_cookie("access_token", access_token)
     full_response.delete_cookie("code")
@@ -77,6 +80,7 @@ def login_42_endpoint(request: HttpRequest):
         user: User = get_object_or_404(User, login_42=login_42)
     except Http404:
         return response.HttpResponseNotFound(reason="There is no account associated with this 42 account")
+    print(f'login 42 endpoint login : {login_42}', flush=True)
     return return_refresh_token(user)
 
 
@@ -88,6 +92,7 @@ def link_42(request: HttpRequest, **kwargs):
     if access_token is None:
         return response.HttpResponseBadRequest(reason="no 42 token in request")
 
+    print(f'link 42 access token :{access_token}', flush=True)
     try:
         user = get_user_from_jwt(kwargs)
     except Http404:
