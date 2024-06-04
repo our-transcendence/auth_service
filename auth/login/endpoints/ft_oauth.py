@@ -23,13 +23,14 @@ import json
 @require_GET
 # return the url to contact when asking for a 42 auth
 def login_42_page(request: HttpRequest):
-    print("login 42 reach", flush=True)
+    print("login 42 page reach", flush=True)
     return response.JsonResponse({"redirect": settings.LOGIN_42_PAGE_URL})
 
 
 @csrf_exempt
 @require_POST
 def get_token_42(request: HttpRequest):
+    print('get_token_42 endpoinr reach', flush=True)
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
@@ -68,6 +69,7 @@ def get_token_42(request: HttpRequest):
 @csrf_exempt
 @require_GET
 def login_42_endpoint(request: HttpRequest):
+    print('login 42 endpoint reach', flush=True)
     access_token = request.COOKIES.get("access_token")
     if access_token is None:
         return response.HttpResponseBadRequest(reason="no 42 token in request")
