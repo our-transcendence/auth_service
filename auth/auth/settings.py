@@ -187,7 +187,7 @@ ENC_HOST = urllib.parse.quote("https://" + NOT_ENC_HOST + ":4443/intra/")
 print(ENC_HOST)
 LOGIN_42_PAGE_URL = f"https://api.intra.42.fr/oauth/authorize?client_id={API_42_UID}&redirect_uri={ENC_HOST}&response_type=code"
 
-API_42_REDIRECT_URI = os.getenv("API_42_REDIRECT_URI", default="https://127.0.0.1:4443")
+# API_42_REDIRECT_URI = os.getenv("API_42_REDIRECT_URI", default="https://127.0.0.1:4443")
 
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "https://user-nginx:4646")
 STATS_SERVICE_URL = os.getenv("STATS_SERVICE_URL", "https://stats-nginx:5151")
