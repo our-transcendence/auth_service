@@ -43,7 +43,7 @@ def get_token_42(request: HttpRequest):
 
     print(f'get token code : {code}', flush=True)
     post_data = {
-        "grant_type": "authorization_code",
+        "grant_type": "client_credentials",
         "client_id": settings.API_42_UID,
         "client_secret": settings.API_42_SECRET,
         "redirect_uri": settings.API_42_REDIRECT_URI,
