@@ -15,6 +15,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 # Standard library imports
 import os
 import re
+import urllib
+
 import urllib3
 from pathlib import Path
 
@@ -173,13 +175,18 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # En production virer le default
-API_42_SECRET = os.getenv("API_42_SECRET")
-API_42_UID = os.getenv("API_42_UID")
-LOGIN_42_PAGE_URL = "https://api.intra.42.fr/oauth/authorize?client_id=u-s4t2ud-6500afe48c7b22ee3e48dece005b1852341e2b7850405c87d4c5fb939b3934d7&redirect_uri=https%3A%2F%2F127.0.0.1%3A4443&response_type=code"
-if API_42_SECRET is None:
-    raise Exception("API_42_SECRET must be defined")
-if API_42_UID is None:
-    raise Exception("API_42_UID must be defined")
+try:
+    API_42_SECRET =os.environ["API_42_SECRET"]
+    API_42_UID = os.environ["API_42_UID"]
+    NOT_ENC_HOST = os.environ["HOST"]
+except KeyError as e:
+    print("At least one of 42_SECRET, 42_UID or HOST is not defined")
+    exit(1)
+
+ENC_HOST = urllib.parse.quote(NOT_ENC_HOST)
+print(ENC_HOST)
+LOGIN_42_PAGE_URL = f"https://api.intra.42.fr/oauth/authorize?client_id={API_42_UID}&redirect_uri={ENC_HOST}&response_type=code"
+
 API_42_REDIRECT_URI = os.getenv("API_42_REDIRECT_URI", default="https://127.0.0.1:4443")
 
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "https://user-nginx:4646")
