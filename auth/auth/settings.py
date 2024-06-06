@@ -183,7 +183,7 @@ except KeyError as e:
     print("At least one of 42_SECRET, 42_UID or HOST is not defined")
     exit(1)
 
-ENC_HOST = urllib.parse.quote(NOT_ENC_HOST)
+ENC_HOST = urllib.parse.quote("https://" + NOT_ENC_HOST + ":4443")
 print(ENC_HOST)
 LOGIN_42_PAGE_URL = f"https://api.intra.42.fr/oauth/authorize?client_id={API_42_UID}&redirect_uri={ENC_HOST}&response_type=code"
 
