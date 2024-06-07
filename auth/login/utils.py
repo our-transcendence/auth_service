@@ -38,11 +38,11 @@ def send_new_user(new_user: User, user_data: dict):
                                         verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e)
-        return response.HttpResponse(status=408, reason="Cant connect to user-service")
+        return response.HttpResponse(status=408, reason_phrase="Cant connect to user-service")
 
     if user_response.status_code != 200:
         print(f"{user_response.status_code}, {user_response.reason}", flush=True)
-        return response.HttpResponse(status=user_response.status_code, reason=user_response.reason)
+        return response.HttpResponse(status=user_response.status_code, reason_phrase=user_response.reason)
 
     # send new user to stats-service
     stats_request_data = {"display_name": user_data["display_name"]}
@@ -53,10 +53,10 @@ def send_new_user(new_user: User, user_data: dict):
                                         verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e)
-        return response.HttpResponse(status=408, reason="Cant connect to stats-service")
+        return response.HttpResponse(status=408, reason_phrase="Cant connect to stats-service")
     if stats_response.status_code != 201:
         print(f"{stats_response.status_code}, {stats_response.reason}", flush=True)
-        return response.HttpResponse(status=stats_response.status_code, reason=stats_response.reason)
+        return response.HttpResponse(status=stats_response.status_code, reason_phrase=stats_response.reason)
     return response.HttpResponse()
 
 def get_42_login_from_token(access_token):
@@ -65,17 +65,17 @@ def get_42_login_from_token(access_token):
         profile_request_header = {"Authorization": f"Bearer {access_token}"}
         profile_response = requests.get("https://api.intra.42.fr/v2/me", headers=profile_request_header)
     except requests.exceptions.RequestException:
-        return None, response.HttpResponse(status=500, reason="Cant connect to 42 api")
+        return None, response.HttpResponse(status=500, reason_phrase="Cant connect to 42 api")
 
     if profile_response.status_code != 200:
         return None, response.HttpResponse(status=profile_response.status_code,
-                                           reason=f"Error: {profile_response.status_code}")
+                                           reason_phrase=f"Error: {profile_response.status_code}")
     # get the login
     try:
         data = json.loads(profile_response.text)
     except json.JSONDecodeError:
-        return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
+        return None, response.HttpResponseBadRequest(reason_phrase="JSON Decode Error")
     login_42 = data.get("login")
     if login_42 is None:
-        return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
+        return None, response.HttpResponseBadRequest(reason_phrase="JSON Decode Error")
     return login_42, None

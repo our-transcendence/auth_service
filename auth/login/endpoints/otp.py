@@ -213,6 +213,6 @@ def get_otp_from_body(body: HttpRequest.body):
 
 
 def otp_failure_handling(code: int, reason: str):
-    response_object = response.HttpResponse(status=code, reason=reason)
+    response_object = response.HttpResponse(status=code, reason_phrase=reason)
     response_object.delete_cookie("otp_status")
     return response_object
