@@ -32,11 +32,11 @@ def get_token_42(request: HttpRequest):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.HttpResponseBadRequest(reason_phrase="JSON Decode Error")
+        return response.HttpResponseBadRequest(reason="JSON Decode Error")
 
     expected_keys = {"code"}
     if set(data.keys()) != expected_keys:
-        return response.HttpResponseBadRequest(reason_phrase="Bad Keys")
+        return response.HttpResponseBadRequest(reason="Bad Keys")
     code = data["code"]
 
     post_data = {
@@ -50,10 +50,10 @@ def get_token_42(request: HttpRequest):
     try:
         oauth_response = requests.post("https://api.intra.42.fr/oauth/token/", data=post_data)
     except requests.exceptions.ConnectionError:
-        return response.HttpResponse(status=503, reason_phrase="Cant connect to 42 api")
+        return response.HttpResponse(status=503, reason="Cant connect to 42 api")
     if oauth_response.status_code != 200:
         return response.HttpResponse(status=oauth_response.status_code,
-                                     reason_phrase=f"Error from 42 API: {oauth_response.status_code}, {oauth_response.text}")
+                                     reason=f"Error from 42 API: {oauth_response.status_code}, {oauth_response.text}")
 
     access_token = oauth_response.json().get("access_token")
     full_response = response.HttpResponse()
@@ -67,7 +67,7 @@ def get_token_42(request: HttpRequest):
 def login_42_endpoint(request: HttpRequest):
     access_token = request.COOKIES.get("access_token")
     if access_token is None:
-        return response.HttpResponseBadRequest(reason_phrase="no 42 token in request")
+        return response.HttpResponseBadRequest(reason="no 42 token in request")
 
     login_42, http_error = get_42_login_from_token(access_token)
     if login_42 is None:
@@ -76,7 +76,7 @@ def login_42_endpoint(request: HttpRequest):
     try:
         user: User = get_object_or_404(User, login_42=login_42)
     except Http404:
-        return response.HttpResponseNotFound(reason_phrase="There is no account associated with this 42 account")
+        return response.HttpResponseNotFound(reason="There is no account associated with this 42 account")
     return return_refresh_token(user)
 
 
@@ -86,15 +86,15 @@ def login_42_endpoint(request: HttpRequest):
 def link_42(request: HttpRequest, **kwargs):
     access_token = request.COOKIES.get("access_token")
     if access_token is None:
-        return response.HttpResponseBadRequest(reason_phrase="no 42 token in request")
+        return response.HttpResponseBadRequest(reason="no 42 token in request")
 
     try:
         user = get_user_from_jwt(kwargs)
     except Http404:
-        return response.HttpResponseBadRequest(reason_phrase="no user corresponding to auth token")
+        return response.HttpResponseBadRequest(reason="no user corresponding to auth token")
 
     if user.login_42 is not None:
-        return response.HttpResponseBadRequest(reason_phrase="There is already a 42 account associated with this account")
+        return response.HttpResponseBadRequest(reason="There is already a 42 account associated with this account")
 
     login_42, http_error = get_42_login_from_token(access_token)
     if login_42 is None:
@@ -105,9 +105,9 @@ def link_42(request: HttpRequest, **kwargs):
         user.save()
     except (IntegrityError, OperationalError) as e:
         print(f"DATABASE FAILURE {e}")
-        return response.HttpResponse(status=503, reason_phrase="Database Failure")
+        return response.HttpResponse(status=503, reason="Database Failure")
 
-    return response.HttpResponse(status=204, reason_phrase="42 account linked successfully")
+    return response.HttpResponse(status=204, reason="42 account linked successfully")
 
 @csrf_exempt
 @require_POST
@@ -115,15 +115,15 @@ def link_42(request: HttpRequest, **kwargs):
 def unlink_42(request: HttpRequest, **kwargs):
     access_token = request.COOKIES.get("access_token")
     if access_token is None:
-        return response.HttpResponseBadRequest(reason_phrase="no 42 token in request")
+        return response.HttpResponseBadRequest(reason="no 42 token in request")
 
     try:
         user = get_user_from_jwt(kwargs)
     except Http404:
-        return response.HttpResponseBadRequest(reason_phrase="no user corresponding to auth token")
+        return response.HttpResponseBadRequest(reason="no user corresponding to auth token")
 
     if user.login_42 is not None:
-        return response.HttpResponseBadRequest(reason_phrase="There is already a 42 account associated with this account")
+        return response.HttpResponseBadRequest(reason="There is already a 42 account associated with this account")
 
     login_42, http_error = get_42_login_from_token(access_token)
     if login_42 is None:
@@ -134,6 +134,6 @@ def unlink_42(request: HttpRequest, **kwargs):
         user.save()
     except (IntegrityError, OperationalError) as e:
         print(f"DATABASE FAILURE {e}")
-        return response.HttpResponse(status=503, reason_phrase="Database Failure")
+        return response.HttpResponse(status=503, reason="Database Failure")
 
-    return response.HttpResponse(status=204, reason_phrase="42 account unlinked successfully")
+    return response.HttpResponse(status=204, reason="42 account unlinked successfully")

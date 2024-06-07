@@ -33,11 +33,11 @@ def register_endpoint(request: HttpRequest):
     try:
         data = json.loads(request.body)
     except json.JSONDecodeError:
-        return response.HttpResponseBadRequest(reason_phrase="JSON Decode Error")
+        return response.HttpResponseBadRequest(reason="JSON Decode Error")
 
     expected_keys = {"login", "password", "display_name"}
     if set(data.keys()) != expected_keys:
-        return response.HttpResponseBadRequest(reason_phrase="Bad Keys")
+        return response.HttpResponseBadRequest(reason="Bad Keys")
 
     user_data = {
         "login": data["login"],
@@ -46,27 +46,27 @@ def register_endpoint(request: HttpRequest):
     }
 
     if user_data["password"].__len__() < 5:
-        return response.HttpResponseBadRequest(reason_phrase="Invalid credential")
+        return response.HttpResponseBadRequest(reason="Invalid credential")
     if User.objects.filter(login=user_data["login"]).exists():
-        return response.HttpResponseForbidden(reason_phrase="User with this login already exists")
+        return response.HttpResponseForbidden(reason="User with this login already exists")
 
     new_user = User(login=user_data["login"], password=user_data["password"], displayName=user_data["display_name"])
     try:
         new_user.save()
     except (IntegrityError, OperationalError) as e:
         print(e, flush=True)
-        return response.HttpResponse(status=503, reason_phrase="Database Failure")
+        return response.HttpResponse(status=503, reason="Database Failure")
 
     try:
         new_user.clean_fields()
     except (exceptions.ValidationError, DataError) as e:
         print(e, flush=True)
-        return response.HttpResponseBadRequest(reason_phrase="Invalid credential")
+        return response.HttpResponseBadRequest(reason="Invalid credential")
 
     send: response.HttpResponse = send_new_user(new_user, user_data)
     if send.status_code != 200:
         new_user.delete()
-        return response.HttpResponse(status=send.status_code, reason_phrase=send.reason)
+        return response.HttpResponse(status=send.status_code, reason=send.reason)
 
     try:
         new_user.password = hashers.make_password(user_data["password"])
@@ -74,7 +74,7 @@ def register_endpoint(request: HttpRequest):
     except (IntegrityError, OperationalError) as e:
         print(f"DATABASE FAILURE {e}")
         # TODO: Send a request to delete user from user-service
-        return response.HttpResponse(status=503, reason_phrase="Database Failure")
+        return response.HttpResponse(status=503, reason="Database Failure")
 
     return return_refresh_token(new_user)
 
@@ -84,36 +84,36 @@ def register_endpoint(request: HttpRequest):
 def login_endpoint(request: HttpRequest):
     auth: str = request.headers.get("Authorization", None)
     if auth is None:
-        return response.HttpResponseBadRequest(reason_phrase="No Authorization header found in request")
+        return response.HttpResponseBadRequest(reason="No Authorization header found in request")
 
     auth_type: str = auth.split(" ", 1)[0]
     if auth_type != "Basic":
-        return response.HttpResponseBadRequest(reason_phrase="invalid Authorization type")
+        return response.HttpResponseBadRequest(reason="invalid Authorization type")
 
     auth_data_encoded: str = auth.split(" ")[1]
     try:
         auth_data = base64.b64decode(auth_data_encoded).decode()
     except binascii.Error:
-        return response.HttpResponseBadRequest(reason_phrase="invalid encoding")
+        return response.HttpResponseBadRequest(reason="invalid encoding")
     login = auth_data.split(":")[0]
     try:
         password = auth_data.split(":", 1)[1]
     except IndexError:
-        return response.HttpResponse(status=401, reason_phrase='Invalid credential')
+        return response.HttpResponse(status=401, reason='Invalid credential')
     try:
         user: User = User.objects.get(login=login)
     except exceptions.ObjectDoesNotExist:
-        return response.HttpResponse(status=401, reason_phrase='Invalid credential')
+        return response.HttpResponse(status=401, reason='Invalid credential')
 
     if not hashers.check_password(password, user.password):
-        return response.HttpResponse(status=401, reason_phrase='Invalid credential')
+        return response.HttpResponse(status=401, reason='Invalid credential')
 
     if not user.totp_enabled:
         return return_refresh_token(user=user)
 
     user.login_attempt = timezone.now()
     user.save()
-    need_otp_response: response.HttpResponse = response.HttpResponse(status=202, reason_phrase="Expecting OTP")
+    need_otp_response: response.HttpResponse = response.HttpResponse(status=202, reason="Expecting OTP")
     need_otp_response.set_cookie(key="otp_user_ID",
                                  value=user.id,
                                  httponly=True,
@@ -132,17 +132,17 @@ def refresh_auth_token(request: HttpRequest):
     try:
         request.COOKIES["auth_token"]
     except KeyError:
-        return response.HttpResponseBadRequest(reason_phrase="no auth token")
+        return response.HttpResponseBadRequest(reason="no auth token")
     try:
         auth = ourJWT.Decoder.decode(request.COOKIES.get("auth_token"), check_date=False)
     except (ourJWT.BadSubject, ourJWT.RefusedToken):
-        return response.HttpResponseBadRequest(reason_phrase='bad auth token')
+        return response.HttpResponseBadRequest(reason='bad auth token')
     auth_login = auth.get("login")
 
     try:
         request.COOKIES["refresh_token"]
     except KeyError:
-        return response.HttpResponseBadRequest(reason_phrase="no refresh token")
+        return response.HttpResponseBadRequest(reason="no refresh token")
     try:
         refresh = ourJWT.Decoder.decode(request.COOKIES.get("refresh_token"))
     except (ourJWT.ExpiredToken, ourJWT.RefusedToken, ourJWT.BadSubject):
@@ -158,6 +158,6 @@ def refresh_auth_token(request: HttpRequest):
 
     jwt_id = refresh["jti"]
     if jwt_id != user.jwt_emitted:
-        return response.HttpResponseBadRequest(reason_phrase="token error")
+        return response.HttpResponseBadRequest(reason="token error")
 
     return return_auth_cookie(user, response.HttpResponse(status=200))

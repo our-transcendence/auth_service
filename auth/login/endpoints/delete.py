@@ -40,5 +40,5 @@ def delete_endpoint(request: HttpRequest, user_id):
     try:
         user.delete()
     except (DatabaseError):
-        return response.HttpResponse(status=412, reason_phrase="Db not reachable")
+        return response.HttpResponse(412, "Db not reachable")
     return response.HttpResponse()
