@@ -16,6 +16,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 import re
 import urllib3
+import socket
+import urllib.parse
 from pathlib import Path
 
 # Django imports
@@ -173,13 +175,16 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 try:
-    LOGIN_42_PAGE_URL = os.environ["LOGIN_42_PAGE"]
     API_42_UID = os.environ["API_42_UID"]
     API_42_SECRET = os.environ["API_42_SECRET"]
 except KeyError as e:
     print(e,flush=True)
     exit(1)
-API_42_REDIRECT_URI = os.getenv("API_42_REDIRECT_URI", default="https://127.0.0.1:4443")
+
+HOST = socket.gethostname()
+API_42_REDIRECT_URI = urllib.parse.quote(f"https://{HOST}:4443/intra", safe='')
+
+LOGIN_42_PAGE = f"https://api.intra.42.fr/oauth/authorize?client_id={API_42_UID}&redirect_uri={API_42_REDIRECT_URI}&response_type=code"
 
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "https://user-nginx:4646")
 STATS_SERVICE_URL = os.getenv("STATS_SERVICE_URL", "https://stats-nginx:5151")
