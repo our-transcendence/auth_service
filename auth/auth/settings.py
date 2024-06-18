@@ -177,11 +177,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 try:
     API_42_UID = os.environ["API_42_UID"]
     API_42_SECRET = os.environ["API_42_SECRET"]
+    HOST = os.environ["HOST"]
 except KeyError as e:
     print(e,flush=True)
     exit(1)
 
-HOST = socket.gethostname()
 API_42_REDIRECT_URI = urllib.parse.quote(f"https://{HOST}:4443/intra", safe='')
 
 LOGIN_42_PAGE = f"https://api.intra.42.fr/oauth/authorize?client_id={API_42_UID}&redirect_uri={API_42_REDIRECT_URI}&response_type=code"
