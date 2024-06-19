@@ -109,7 +109,7 @@ def link_42(request: HttpRequest, **kwargs):
     try:
         user.save()
     except (IntegrityError, OperationalError) as e:
-        print(f"DATABASE FAILURE {e}")
+        print(f"DATABASE FAILURE {e}", flush=True)
         return response.HttpResponse(status=503, reason="Database Failure")
 
     return response.HttpResponse(status=204, reason="42 account linked successfully")
@@ -138,7 +138,7 @@ def unlink_42(request: HttpRequest, **kwargs):
     try:
         user.save()
     except (IntegrityError, OperationalError) as e:
-        print(f"DATABASE FAILURE {e}")
+        print(f"DATABASE FAILURE {e}", flush=True)
         return response.HttpResponse(status=503, reason="Database Failure")
 
     return response.HttpResponse(status=204, reason="42 account unlinked successfully")

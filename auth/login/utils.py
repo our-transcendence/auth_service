@@ -37,7 +37,7 @@ def send_new_user(new_user: User, user_data: dict):
                                         headers=headers,
                                         verify=False)
     except requests.exceptions.ConnectionError as e:
-        print(e)
+        print(e, flush=True)
         return response.HttpResponse(status=408, reason="Cant connect to user-service")
 
     if user_response.status_code != 200:
@@ -52,7 +52,7 @@ def send_new_user(new_user: User, user_data: dict):
                                         headers=headers,
                                         verify=False)
     except requests.exceptions.ConnectionError as e:
-        print(e)
+        print(e, flush=True)
         return response.HttpResponse(status=408, reason="Cant connect to stats-service")
     if stats_response.status_code != 201:
         print(f"{stats_response.status_code}, {stats_response.reason}", flush=True)

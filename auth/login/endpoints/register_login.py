@@ -72,7 +72,7 @@ def register_endpoint(request: HttpRequest):
         new_user.password = hashers.make_password(user_data["password"])
         new_user.save()
     except (IntegrityError, OperationalError) as e:
-        print(f"DATABASE FAILURE {e}")
+        print(f"DATABASE FAILURE {e}", flush=True)
         # TODO: Send a request to delete user from user-service
         return response.HttpResponse(status=503, reason="Database Failure")
 
