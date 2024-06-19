@@ -89,6 +89,8 @@ def link_42(request: HttpRequest, **kwargs):
     if access_token is None:
         return response.HttpResponseBadRequest(reason="no 42 token in request")
 
+    print(f"access_token = {access_token}", flush=True)
+
     try:
         user = get_user_from_jwt(kwargs)
     except Http404:
