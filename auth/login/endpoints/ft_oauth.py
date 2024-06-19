@@ -45,7 +45,7 @@ def get_token_42(request: HttpRequest):
         "grant_type": "authorization_code",
         "client_id": settings.API_42_UID,
         "client_secret": settings.API_42_SECRET,
-        "redirect_uri": f"https://{settings.HOST}:4443/intra",
+        "redirect_uri": settings.API_42_REDIRECT_URI,
         "code": code,
     }
 

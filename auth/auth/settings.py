@@ -182,9 +182,9 @@ except KeyError as e:
     print(e,flush=True)
     exit(1)
 
-API_42_REDIRECT_URI = urllib.parse.quote(f"https://{HOST}:4443/intra", safe='')
+API_42_REDIRECT_URI = f"https://{HOST}:4443/intra"
 
-LOGIN_42_PAGE_URL = f"https://api.intra.42.fr/oauth/authorize?client_id={API_42_UID}&redirect_uri={API_42_REDIRECT_URI}&response_type=code"
+LOGIN_42_PAGE_URL = f"https://api.intra.42.fr/oauth/authorize?client_id={API_42_UID}&redirect_uri={urllib.parse.quote(API_42_REDIRECT_URI, safe='')}&response_type=code"
 
 USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "https://user-nginx:4646")
 STATS_SERVICE_URL = os.getenv("STATS_SERVICE_URL", "https://stats-nginx:5151")
