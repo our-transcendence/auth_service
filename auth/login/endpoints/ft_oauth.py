@@ -99,6 +99,7 @@ def link_42(request: HttpRequest, **kwargs):
 
     login_42, http_error = get_42_login_from_token(access_token)
     if login_42 is None:
+        print(http_error.reason_phrase, flush=True)
         return http_error
 
     user.login_42 = login_42
