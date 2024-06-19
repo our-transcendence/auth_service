@@ -127,12 +127,15 @@ def unlink_42(request: HttpRequest, **kwargs):
     except Http404:
         return response.HttpResponseBadRequest(reason="no user corresponding to auth token")
 
-    if user.login_42 is not None:
-        return response.HttpResponseBadRequest(reason="There is already a 42 account associated with this account")
+    if user.login_42 is None:
+        return response.HttpResponseBadRequest(reason="There is no  42 account associated with this account")
 
     login_42, http_error = get_42_login_from_token(access_token)
     if login_42 is None:
         return http_error
+
+    if (login_42 != user.login_42):
+        return response.HttpResponseBadRequest(reason="The 42 token given does not correspond to the logged in user")
 
     user.login_42 = None
     try:
