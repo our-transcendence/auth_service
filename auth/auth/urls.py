@@ -46,7 +46,7 @@ urlpatterns = [
     path('token_42/', ft_oauth.get_token_42),
     path('login_42/', ft_oauth.login_42_endpoint),
     path('link_42/', ft_oauth.link_42),
-    path('unlink_42/', ft_oauth.link_42),
+    path('unlink_42/', ft_oauth.unlink_42),
 
     # Info
     path('infos/', info.get_info),
