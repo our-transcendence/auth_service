@@ -41,7 +41,7 @@ def get_token_42(request: HttpRequest):
     code = data["code"]
 
     post_data = {
-        "grant_type": "client_credentials",
+        "grant_type": "authorization_code",
         "client_id": settings.API_42_UID,
         "client_secret": settings.API_42_SECRET,
         "redirect_uri": settings.API_42_REDIRECT_URI,
