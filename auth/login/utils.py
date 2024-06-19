@@ -65,7 +65,7 @@ def get_42_login_from_token(access_token):
     # try request to api with the token
     try:
         # profile_request_header = {"Authorization": f"Bearer {access_token}"}
-        profile_response = requests.get(f"https://api.intra.42.fr/v2/me?access_token={access_token}", headers=profile_request_header)
+        profile_response = requests.get(f"https://api.intra.42.fr/v2/me?access_token={access_token}")
     except requests.exceptions.RequestException:
         return None, response.HttpResponse(status=500, reason="Cant connect to 42 api")
 
