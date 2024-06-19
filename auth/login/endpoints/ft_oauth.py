@@ -23,6 +23,7 @@ import json
 @require_GET
 # return the url to contact when asking for a 42 auth
 def login_42_page(request: HttpRequest):
+    print("login 42 page", flush=True)
     print(settings.LOGIN_42_PAGE_URL, flush=True)
     return response.JsonResponse({"redirect": settings.LOGIN_42_PAGE_URL})
 
@@ -44,7 +45,7 @@ def get_token_42(request: HttpRequest):
         "grant_type": "authorization_code",
         "client_id": settings.API_42_UID,
         "client_secret": settings.API_42_SECRET,
-        "redirect_uri": settings.API_42_REDIRECT_URI,
+        "redirect_uri": f"https://{settings.HOST}:4443/intra",
         "code": code,
     }
 
