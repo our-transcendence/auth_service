@@ -23,6 +23,7 @@ import json
 @require_GET
 # return the url to contact when asking for a 42 auth
 def login_42_page(request: HttpRequest):
+    print(settings.LOGIN_42_PAGE_URL, flush=True)
     return response.JsonResponse({"redirect": settings.LOGIN_42_PAGE_URL})
 
 
