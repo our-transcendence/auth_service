@@ -66,7 +66,7 @@ def register_endpoint(request: HttpRequest):
     send: response.HttpResponse = send_new_user(new_user, user_data)
     if send.status_code != 200:
         new_user.delete()
-        return response.HttpResponse(status=send.status_code, reason=send.reason)
+        return response.HttpResponse(status=send.status_code, reason=send.reason_phrase)
 
     try:
         new_user.password = hashers.make_password(user_data["password"])
