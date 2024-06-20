@@ -186,5 +186,6 @@ API_42_REDIRECT_URI = f"https://{HOST}:4443/intra"
 
 LOGIN_42_PAGE_URL = f"https://api.intra.42.fr/oauth/authorize?client_id={API_42_UID}&redirect_uri={urllib.parse.quote(API_42_REDIRECT_URI, safe='')}&response_type=code"
 
-USER_SERVICE_URL = os.getenv("USER_SERVICE_URL", "https://user-nginx:4646")
-STATS_SERVICE_URL = os.getenv("STATS_SERVICE_URL", "https://stats-nginx:5151")
+USER_SERVICE_URL = "https://user-nginx:4646"
+STATS_SERVICE_URL = "https://stats-nginx:5151"
+HISTORY_SERVICE_URL = "https://history-nginx:4343"
