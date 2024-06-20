@@ -11,7 +11,7 @@ from cryptography.hazmat.primitives import serialization
 
 # Local application/library specific imports
 from ourJWT import OUR_class, OUR_exception
-
+from auth.settings import print
 SERVICE_KEY = os.getenv("INTER_SERVICE_KEY")
 
 def keygen():
