@@ -41,9 +41,9 @@ OUR_class.Decoder.pub_key = PUBKEY
 
 try:
     encoder = OUR_class.Encoder(PRIVKEY)
-    print("created both encoder and decoder object", flush=True)
+    print("created both encoder and decoder object")
 except OUR_exception.NoKey:
-    print("NO KEY ERROR", flush=True)
+    print("NO KEY ERROR")
     exit()
 
 
