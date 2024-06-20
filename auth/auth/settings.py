@@ -45,6 +45,20 @@ urllib3.disable_warnings()  # TODO Remove in prod
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+# Custom print function
+def custom_print(*args, **kwargs):
+    # Check if printing is enabled
+    if DEBUG:
+        # Use the built-in print function (reference assigned below)
+        built_in_print(*args, **kwargs, flush=True)
+    else:
+        pass
+
+# Save a reference to the original built-in print function
+built_in_print = print
+
+# Override the built-in print with the custom print function
+print = custom_print
 
 ALLOWED_HOSTS = [
     '82.64.223.220',
@@ -179,7 +193,7 @@ try:
     API_42_SECRET = os.environ["API_42_SECRET"]
     HOST = os.environ["HOST"]
 except KeyError as e:
-    print(e,flush=True)
+    print(e)
     exit(1)
 
 API_42_REDIRECT_URI = f"https://{HOST}:4443/intra"
