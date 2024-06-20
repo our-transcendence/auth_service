@@ -57,6 +57,21 @@ def send_new_user(new_user: User, user_data: dict):
     if stats_response.status_code != 201:
         print(f"{stats_response.status_code}, {stats_response.reason}", flush=True)
         return response.HttpResponse(status=stats_response.status_code, reason=stats_response.reason)
+
+    # send new user to history-service
+    history_request_data = {"display_name": user_data["display_name"], "player_id": new_user_id}
+    try:
+         history_response = requests.post(f"{settings.HISTORY_SERVICE_URL}/playerregister",
+                                        data=json.dumps(history_request_data),
+                                        headers=headers,
+                                        verify=False)
+    except requests.exceptions.ConnectionError as e:
+        print(e)
+        return response.HttpResponse(status=408, reason="Cant connect to history-service")
+    if history_response.status_code != 201:
+        print(f"{history_response.status_code}, {history_response.reason}", flush=True)
+        return response.HttpResponse(status=history_response.status_code, reason=history_response.reason)
+
     return response.HttpResponse()
 
 def get_42_login_from_token(access_token):
