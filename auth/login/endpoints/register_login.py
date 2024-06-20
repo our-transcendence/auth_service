@@ -20,6 +20,7 @@ from django.views.decorators.http import require_POST, require_GET
 from login.models import User
 from ..utils import send_new_user
 from ..cookie import return_auth_cookie, return_refresh_token
+from auth.settings import print
 
 import ourJWT.OUR_exception
 
@@ -54,13 +55,13 @@ def register_endpoint(request: HttpRequest):
     try:
         new_user.save()
     except (IntegrityError, OperationalError) as e:
-        print(e, flush=True)
+        print(e)
         return response.HttpResponse(status=503, reason="Database Failure")
 
     try:
         new_user.clean_fields()
     except (exceptions.ValidationError, DataError) as e:
-        print(e, flush=True)
+        print(e)
         return response.HttpResponseBadRequest(reason="Invalid credential")
 
     send: response.HttpResponse = send_new_user(new_user, user_data)
@@ -72,7 +73,7 @@ def register_endpoint(request: HttpRequest):
         new_user.password = hashers.make_password(user_data["password"])
         new_user.save()
     except (IntegrityError, OperationalError) as e:
-        print(f"DATABASE FAILURE {e}", flush=True)
+        print(f"DATABASE FAILURE {e}")
         # TODO: Send a request to delete user from user-service
         return response.HttpResponse(status=503, reason="Database Failure")
 

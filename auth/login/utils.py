@@ -14,6 +14,7 @@ from django.forms.models import model_to_dict
 from login.models import User
 from login.cookie import duration
 from auth import settings
+from auth.settings import print
 from . import crypto
 
 def get_user_from_jwt(kwargs):
@@ -37,11 +38,11 @@ def send_new_user(new_user: User, user_data: dict):
                                         headers=headers,
                                         verify=False)
     except requests.exceptions.ConnectionError as e:
-        print(e, flush=True)
+        print(e)
         return response.HttpResponse(status=408, reason="Cant connect to user-service")
 
     if user_response.status_code != 200:
-        print(f"{user_response.status_code}, {user_response.reason}", flush=True)
+        print(f"{user_response.status_code}, {user_response.reason}")
         return response.HttpResponse(status=user_response.status_code, reason=user_response.reason)
 
     # send new user to stats-service
@@ -52,10 +53,10 @@ def send_new_user(new_user: User, user_data: dict):
                                         headers=headers,
                                         verify=False)
     except requests.exceptions.ConnectionError as e:
-        print(e, flush=True)
+        print(e)
         return response.HttpResponse(status=408, reason="Cant connect to stats-service")
     if stats_response.status_code != 201:
-        print(f"{stats_response.status_code}, {stats_response.reason}", flush=True)
+        print(f"{stats_response.status_code}, {stats_response.reason}")
         return response.HttpResponse(status=stats_response.status_code, reason=stats_response.reason)
 
     # send new user to history-service
@@ -69,14 +70,14 @@ def send_new_user(new_user: User, user_data: dict):
         print(e)
         return response.HttpResponse(status=408, reason="Cant connect to history-service")
     if history_response.status_code != 201:
-        print(f"{history_response.status_code}, {history_response.reason}", flush=True)
+        print(f"{history_response.status_code}, {history_response.reason}")
         return response.HttpResponse(status=history_response.status_code, reason=history_response.reason)
 
     return response.HttpResponse()
 
 def get_42_login_from_token(access_token):
 
-    print("Inside get_42_login func", flush=True)
+    print("Inside get_42_login func")
     # try request to api with the token
     try:
         # profile_request_header = {"Authorization": f"Bearer {access_token}"}

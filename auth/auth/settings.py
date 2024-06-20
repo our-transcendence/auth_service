@@ -45,7 +45,7 @@ urllib3.disable_warnings()  # TODO Remove in prod
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-DEBUG_PRINT = False
+DEBUG_PRINT = True
 
 # Custom print function
 def custom_print(*args, **kwargs):

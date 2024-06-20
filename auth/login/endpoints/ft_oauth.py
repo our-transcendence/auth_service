@@ -16,6 +16,8 @@ from login.models import User
 from ..utils import get_user_from_jwt, get_42_login_from_token
 from ..cookie import return_refresh_token
 from auth import settings
+from auth.settings import print
+
 
 import json
 
@@ -23,8 +25,8 @@ import json
 @require_GET
 # return the url to contact when asking for a 42 auth
 def login_42_page(request: HttpRequest):
-    print("login 42 page", flush=True)
-    print(settings.LOGIN_42_PAGE_URL, flush=True)
+    print("login 42 page")
+    print(settings.LOGIN_42_PAGE_URL)
     return response.JsonResponse({"redirect": settings.LOGIN_42_PAGE_URL})
 
 
@@ -90,7 +92,7 @@ def link_42(request: HttpRequest, **kwargs):
     if access_token is None:
         return response.HttpResponseBadRequest(reason="no 42 token in request")
 
-    print(f"access_token = {access_token}", flush=True)
+    print(f"access_token = {access_token}")
 
     try:
         user = get_user_from_jwt(kwargs)
@@ -102,14 +104,14 @@ def link_42(request: HttpRequest, **kwargs):
 
     login_42, http_error = get_42_login_from_token(access_token)
     if login_42 is None:
-        print(http_error.reason_phrase, flush=True)
+        print(http_error.reason_phrase)
         return http_error
 
     user.login_42 = login_42
     try:
         user.save()
     except (IntegrityError, OperationalError) as e:
-        print(f"DATABASE FAILURE {e}", flush=True)
+        print(f"DATABASE FAILURE {e}")
         return response.HttpResponse(status=503, reason="Database Failure")
 
     return response.HttpResponse(status=204, reason="42 account linked successfully")
@@ -141,7 +143,7 @@ def unlink_42(request: HttpRequest, **kwargs):
     try:
         user.save()
     except (IntegrityError, OperationalError) as e:
-        print(f"DATABASE FAILURE {e}", flush=True)
+        print(f"DATABASE FAILURE {e}")
         return response.HttpResponse(status=503, reason="Database Failure")
 
     return response.HttpResponse(status=204, reason="42 account unlinked successfully")

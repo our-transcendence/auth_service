@@ -11,6 +11,7 @@ from django.views.decorators.http import require_POST
 from login.models import User
 from ..utils import get_user_from_jwt
 import ourJWT.OUR_exception
+from auth.settings import print
 
 # Third-party imports
 
@@ -51,6 +52,6 @@ def logout_everywhere(request: HttpRequest, **kwargs):
     try:
         user.save()
     except (IntegrityError, OperationalError) as e:
-        print(f"DATABASE FAILURE {e}", flush=True)
+        print(f"DATABASE FAILURE {e}")
         return response.HttpResponse(status=503, reason="Database Failure")
     return logout_response

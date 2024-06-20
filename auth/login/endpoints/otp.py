@@ -18,6 +18,7 @@ from ..models import User
 from ..utils import get_user_from_jwt
 from ..cookie import return_refresh_token
 import ourJWT.OUR_exception
+from auth.settings import print
 
 NO_OTP = 400, "No otp in request"
 NO_USER = 404, "No user found with given ID"
@@ -122,7 +123,7 @@ def otp_login_backend(request: HttpRequest):
     try:
         user.save()
     except (IntegrityError, OperationalError) as e:
-        print(e, flush=True)
+        print(e)
         return response.HttpResponse(*FAILED_DB)
     return return_refresh_token(user)
 
