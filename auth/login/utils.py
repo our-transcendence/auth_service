@@ -44,6 +44,7 @@ def send_new_user(new_user: User, user_data: dict):
     if user_response.status_code != 200:
         print(f"{user_response.status_code}, {user_response.reason}")
         return response.HttpResponse(status=user_response.status_code, reason=user_response.reason)
+    print(f"user {new_user_id} sent to user service")
 
     # send new user to stats-service
     stats_request_data = {"display_name": user_data["display_name"]}
@@ -58,6 +59,7 @@ def send_new_user(new_user: User, user_data: dict):
     if stats_response.status_code != 201:
         print(f"{stats_response.status_code}, {stats_response.reason}")
         return response.HttpResponse(status=stats_response.status_code, reason=stats_response.reason)
+    print(f"user {new_user_id} sent to stat service")
 
     # send new user to history-service
     history_request_data = {"display_name": user_data["display_name"], "player_id": new_user_id}
@@ -72,21 +74,21 @@ def send_new_user(new_user: User, user_data: dict):
     if history_response.status_code != 201:
         print(f"{history_response.status_code}, {history_response.reason}")
         return response.HttpResponse(status=history_response.status_code, reason=history_response.reason)
+    print(f"user {new_user_id} sent to history service")
 
     return response.HttpResponse()
 
 def get_42_login_from_token(access_token):
-
-    print("Inside get_42_login func")
     # try request to api with the token
     try:
         # profile_request_header = {"Authorization": f"Bearer {access_token}"}
+        print(f"{get_42_login_from_token.__name__}: Request to https://api.intra.42.fr/v2/me?access_token={access_token}")
         profile_response = requests.get(f"https://api.intra.42.fr/v2/me?access_token={access_token}")
     except requests.exceptions.RequestException:
         return None, response.HttpResponse(status=500, reason="Cant connect to 42 api")
 
     if profile_response.status_code != 200:
-        print("Response from 42 API is not 200", flush= True)
+        print(f"{get_42_login_from_token.__name__}: Response from 42 API is not 200")
         return None, response.HttpResponse(status=profile_response.status_code,
                                            reason=f"Error: {profile_response.status_code}")
     # get the login
@@ -96,5 +98,6 @@ def get_42_login_from_token(access_token):
         return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
     login_42 = data.get("login")
     if login_42 is None:
+        print(f"{get_42_login_from_token.__name__}: error in response from 42 api")
         return None, response.HttpResponseBadRequest(reason="JSON Decode Error")
     return login_42, None
