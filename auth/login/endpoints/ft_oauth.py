@@ -105,6 +105,9 @@ def link_42(request: HttpRequest, **kwargs):
         print(http_error.reason_phrase, flush=True)
         return http_error
 
+    if User.objects.filter(login_42=login_42).exists():
+        return response.HttpResponseForbidden(reason="There is already a 42 account associated with this account")
+
     user.login_42 = login_42
     try:
         user.save()
