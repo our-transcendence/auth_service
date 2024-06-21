@@ -9,12 +9,12 @@ from django.http import response
 from django.shortcuts import get_object_or_404
 from django.forms.models import model_to_dict
 
-
 # Local application/library specific imports
 from login.models import User
 from login.cookie import duration
 from auth import settings
 from . import crypto
+
 
 def get_user_from_jwt(kwargs):
     auth = kwargs["token"]
@@ -27,15 +27,15 @@ def send_new_user(new_user: User, user_data: dict):
     # send new user to user-service
     new_user_id = new_user.id
     user_request_data = {"id": new_user_id,
-                           "login": user_data["login"],
-                           "display_name": user_data["display_name"]}
+                         "login": user_data["login"],
+                         "display_name": user_data["display_name"]}
     headers = {'Authorization': crypto.SERVICE_KEY,
                'Content-Type': 'application/json'}
     try:
         user_response = requests.post(f"{settings.USER_SERVICE_URL}/register/",
-                                        data=json.dumps(user_request_data),
-                                        headers=headers,
-                                        verify=False)
+                                      data=json.dumps(user_request_data),
+                                      headers=headers,
+                                      verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e, flush=True)
         return response.HttpResponse(status=408, reason="Cant connect to user-service")
@@ -48,9 +48,9 @@ def send_new_user(new_user: User, user_data: dict):
     stats_request_data = {"display_name": user_data["display_name"]}
     try:
         stats_response = requests.post(f"{settings.STATS_SERVICE_URL}/stats/{new_user_id}/register",
-                                        data=json.dumps(stats_request_data),
-                                        headers=headers,
-                                        verify=False)
+                                       data=json.dumps(stats_request_data),
+                                       headers=headers,
+                                       verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e, flush=True)
         return response.HttpResponse(status=408, reason="Cant connect to stats-service")
@@ -61,10 +61,10 @@ def send_new_user(new_user: User, user_data: dict):
     # send new user to history-service
     history_request_data = {"display_name": user_data["display_name"], "player_id": new_user_id}
     try:
-         history_response = requests.post(f"{settings.HISTORY_SERVICE_URL}/playerregister",
-                                        data=json.dumps(history_request_data),
-                                        headers=headers,
-                                        verify=False)
+        history_response = requests.post(f"{settings.HISTORY_SERVICE_URL}/playerregister",
+                                         data=json.dumps(history_request_data),
+                                         headers=headers,
+                                         verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e)
         return response.HttpResponse(status=408, reason="Cant connect to history-service")
@@ -74,8 +74,8 @@ def send_new_user(new_user: User, user_data: dict):
 
     return response.HttpResponse()
 
-def get_42_login_from_token(access_token):
 
+def get_42_login_from_token(access_token):
     print("Inside get_42_login func", flush=True)
     # try request to api with the token
     try:
@@ -85,7 +85,7 @@ def get_42_login_from_token(access_token):
         return None, response.HttpResponse(status=500, reason="Cant connect to 42 api")
 
     if profile_response.status_code != 200:
-        print("Response from 42 API is not 200", flush= True)
+        print("Response from 42 API is not 200", flush=True)
         return None, response.HttpResponse(status=profile_response.status_code,
                                            reason=f"Error: {profile_response.status_code}")
     # get the login
