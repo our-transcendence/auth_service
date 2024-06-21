@@ -45,10 +45,11 @@ def send_new_user(new_user: User, user_data: dict):
         return response.HttpResponse(status=user_response.status_code, reason=user_response.reason)
 
     # send new user to stats-service
-    stats_request_data = {"display_name": user_data["display_name"]}
+    # stats_request_data = {"display_name": user_data["display_name"]}
     try:
         stats_response = requests.post(f"{settings.STATS_SERVICE_URL}/stats/{new_user_id}/register",
-                                       data=json.dumps(stats_request_data),
+                                       # data=json.dumps(stats_request_data),
+                                        data=None,
                                        headers=headers,
                                        verify=False)
     except requests.exceptions.ConnectionError as e:
@@ -59,7 +60,8 @@ def send_new_user(new_user: User, user_data: dict):
         return response.HttpResponse(status=stats_response.status_code, reason=stats_response.reason)
 
     # send new user to history-service
-    history_request_data = {"display_name": user_data["display_name"], "player_id": new_user_id}
+    # history_request_data = {"display_name": user_data["display_name"], "player_id": new_user_id}
+    history_request_data = {"player_id": new_user_id}
     try:
         history_response = requests.post(f"{settings.HISTORY_SERVICE_URL}/playerregister",
                                          data=json.dumps(history_request_data),

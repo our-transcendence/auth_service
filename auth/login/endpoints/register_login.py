@@ -41,7 +41,7 @@ def register_endpoint(request: HttpRequest):
 
     user_data = {
         "login": data["login"],
-        # "display_name": data["display_name"],
+        "display_name": data["display_name"],
         "password": data["password"]
     }
 
