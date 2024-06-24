@@ -48,7 +48,7 @@ def return_refresh_token(user: User):
 
 def get_dn(id: int):
     try:
-        response = requests.get(f"{settings.USER_SERVICE_URL}/{id}/infos/",
+        info_response = requests.get(f"{settings.USER_SERVICE_URL}/{id}/infos/",
                                 data=None,
                                 headers=None,
                                 verify=False)
@@ -56,9 +56,9 @@ def get_dn(id: int):
         print(e, flush=True)
         return response.HttpResponse(status=408, reason="Cant connect to user-service")
 
-    if response.status_code == 200:
+    if info_response.status_code == 200:
         print(f"{response.status_code}, {response.reason}", flush=True)
         return response.HttpResponse(status=response.status_code, reason=response.reason)
 
-    data = response.json()
+    data = info_response.json()
     return data["display_name"]
