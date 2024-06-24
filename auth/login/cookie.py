@@ -62,6 +62,6 @@ def get_dn(id: int):
 
     data = info_response.json()
     print(data, flush=True)
-    print(data["display_name"], flush=True)
+    print(data["displayName"], flush=True)
 
-    return data["display_name"]
+    return data["displayName"]
