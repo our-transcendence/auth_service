@@ -57,7 +57,7 @@ def get_dn(id: int):
         return response.HttpResponse(status=408, reason="Cant connect to user-service")
 
     if info_response.status_code == 200:
-        print(f"{response.status_code}, {response.reason}", flush=True)
+        print(f"{info_response.status_code}, {info_response.reason}", flush=True)
         return response.HttpResponse(status=info_response.status_code, reason=info_response.reason)
 
     data = info_response.json()
