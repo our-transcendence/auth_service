@@ -58,7 +58,7 @@ def get_dn(id: int):
 
     if info_response.status_code == 200:
         print(f"{response.status_code}, {response.reason}", flush=True)
-        return response.HttpResponse(status=response.status_code, reason=response.reason)
+        return response.HttpResponse(status=info_response.status_code, reason=info_response.reason)
 
     data = info_response.json()
     return data["display_name"]
