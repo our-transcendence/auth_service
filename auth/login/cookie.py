@@ -19,6 +19,7 @@ duration = int(os.getenv("AUTH_LIFETIME", "10"))
 
 def return_auth_cookie(user: User, full_response: response.HttpResponse):
     user_dict = model_to_dict(user, exclude=["password",
+                                             "login_42"
                                              "totp_key",
                                              "login_attempt",
                                              "totp_enabled"])
