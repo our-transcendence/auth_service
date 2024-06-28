@@ -25,7 +25,11 @@ def return_auth_cookie(user: User, full_response: response.HttpResponse):
                                              "totp_enabled"])
     expdate = datetime.now() + timedelta(minutes=duration)
     user_dict["exp"] = expdate
-    user_dict["display_name"] = get_dn(user.id)
+    try :
+        user_dict["display_name"] = get_dn(user.id)
+    except requests.exceptions.ConnectionError:
+        print(f"couldn't get display_name for id {user.id}", flush=True)
+        user_dict["display_name"] = user.login
     payload = crypto.encoder.encode(user_dict, "auth")
     full_response.set_cookie(key="auth_token",
                              value=payload,
@@ -55,11 +59,12 @@ def get_dn(id: int):
                                 verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e, flush=True)
-        return response.HttpResponse(status=408, reason="Cant connect to user-service")
+        raise requests.exceptions.ConnectionError
 
     if info_response.status_code != 200:
         print(f"{info_response.status_code}, {info_response.reason}", flush=True)
-        return response.HttpResponse(status=info_response.status_code, reason=info_response.reason)
+        raise requests.exceptions.ConnectionError
+
 
     data = info_response.json()
     print(data, flush=True)
