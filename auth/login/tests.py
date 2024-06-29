@@ -1,15 +1,28 @@
-from django.test import TestCase
+import json
+from django.test import TestCase, RequestFactory
 from login.models import User
+from login.endpoints.register_login import register_endpoint
 
 # Create your tests here.
 
-class AnimalTestCase(TestCase):
+class register_Test(TestCase):
     def setUp(self):
-        User.objects.create(name="lion", sound="roar")
-        User.objects.create(name="cat", sound="meow")
+        pass
 
-    def test_animals_can_speak(self):
-        lion = User.objects.get(name="lion")
-        cat = User.objects.get(name="cat")
-        self.assertEqual(lion.speak(), 'The lion says "roar"')
-        self.assertEqual(cat.speak(), 'The cat says "meow"')
+    def test_empty_json(self):
+        json_data = {}
+        response = self.client.post('/register/',
+                                    json.dumps(json_data),
+                                    content_type="application/json")
+        self.assertIn(response.status_code, [400, 401])
+
+    def test_int_in_field(self):
+        json_data = {
+            "login": 4,
+            "password": 5,
+            "display_name": 5
+        }
+        response = self.client.post('/register/',
+                                    json.dumps(json_data),
+                                    content_type="application/json")
+        self.assertIn(response.status_code, [400, 401])
