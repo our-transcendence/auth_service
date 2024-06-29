@@ -45,6 +45,7 @@ def register_endpoint(request: HttpRequest):
         "password": data["password"]
     }
 
+    # TODO check that pass word is a string
     if user_data["password"].__len__() < 5:
         return response.HttpResponseBadRequest(reason="Invalid credential")
     if User.objects.filter(login=user_data["login"]).exists():
@@ -161,4 +162,4 @@ def refresh_auth_token(request: HttpRequest):
     if jwt_id != user.jwt_emitted:
         return response.HttpResponseBadRequest(reason="token error")
 
-    return return_auth_cookie(user, response.HttpResponse(status=200))
+    return return_auth_cookie(user, response.HttpResponse())
