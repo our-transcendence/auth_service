@@ -40,13 +40,13 @@ def register_endpoint(request: HttpRequest):
         return response.HttpResponseBadRequest(reason="Bad Keys")
 
     user_data = {
-        "login": data["login"],
-        "display_name": data["display_name"],
-        "password": data["password"]
+        "login": str(data["login"]),
+        "display_name": str(data["display_name"]),
+        "password": str(data["password"])
     }
 
     # TODO check that pass word is a string
-    if user_data["password"].__len__() < 5:
+    if len(user_data["password"]) < 5:
         return response.HttpResponseBadRequest(reason="Invalid credential")
     if User.objects.filter(login=user_data["login"]).exists():
         return response.HttpResponseForbidden(reason="User with this login already exists")
