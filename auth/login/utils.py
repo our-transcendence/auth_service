@@ -23,14 +23,11 @@ def get_user_from_jwt(kwargs):
     return user
 
 
-def send_new_user(new_user: User, user_data: dict):
-    # send new user to user-service
-    new_user_id = new_user.id
+def send_user_to_user_service(user: User, user_data: dict, headers: dict):
+    new_user_id = user.id
     user_request_data = {"id": new_user_id,
                          "login": user_data["login"],
                          "display_name": user_data["display_name"]}
-    headers = {'Authorization': crypto.SERVICE_KEY,
-               'Content-Type': 'application/json'}
     try:
         user_response = requests.post(f"{settings.USER_SERVICE_URL}/register/",
                                       data=json.dumps(user_request_data),
@@ -38,30 +35,30 @@ def send_new_user(new_user: User, user_data: dict):
                                       verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e, flush=True)
-        return response.HttpResponse(status=408, reason="Cant connect to user-service")
+        raise requests.exceptions.ConnectionError("Cant connect to user-service")
 
     if user_response.status_code != 200:
         print(f"{user_response.status_code}, {user_response.reason}", flush=True)
-        return response.HttpResponse(status=user_response.status_code, reason=user_response.reason)
+        raise requests.exceptions.ConnectionError(f"{user_response.status_code}, {user_response.reason}")
 
-    # send new user to stats-service
-    # stats_request_data = {"display_name": user_data["display_name"]}
+
+def send_user_to_stats_service(user: User, user_data: dict, headers: dict):
     try:
-        stats_response = requests.post(f"{settings.STATS_SERVICE_URL}/stats/{new_user_id}/register",
+        stats_response = requests.post(f"{settings.STATS_SERVICE_URL}/stats/{user.id}/register",
                                        # data=json.dumps(stats_request_data),
                                         data=None,
                                        headers=headers,
                                        verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e, flush=True)
-        return response.HttpResponse(status=408, reason="Cant connect to stats-service")
+        raise requests.exceptions.ConnectionError("Cant connect to stats-service")
+
     if stats_response.status_code != 201:
         print(f"{stats_response.status_code}, {stats_response.reason}", flush=True)
-        return response.HttpResponse(status=stats_response.status_code, reason=stats_response.reason)
+        raise requests.exceptions.ConnectionError(f"{stats_response.status_code}, {stats_response.reason}")
 
-    # send new user to history-service
-    # history_request_data = {"display_name": user_data["display_name"], "player_id": new_user_id}
-    history_request_data = {"player_id": new_user_id}
+def send_user_to_history_service(user: User, user_data: dict, headers: dict):
+    history_request_data = {"player_id": user.id}
     try:
         history_response = requests.post(f"{settings.HISTORY_SERVICE_URL}/playerregister",
                                          data=json.dumps(history_request_data),
@@ -69,11 +66,36 @@ def send_new_user(new_user: User, user_data: dict):
                                          verify=False)
     except requests.exceptions.ConnectionError as e:
         print(e)
-        return response.HttpResponse(status=408, reason="Cant connect to history-service")
+        raise requests.exceptions.ConnectionError("Cant connect to history-service")
     if history_response.status_code != 201:
         print(f"{history_response.status_code}, {history_response.reason}", flush=True)
-        return response.HttpResponse(status=history_response.status_code, reason=history_response.reason)
+        raise requests.exceptions.ConnectionError(f"{history_response.status_code}, {history_response.reason}")
 
+def send_new_user(new_user: User, user_data: dict):
+    headers = {'Authorization': crypto.SERVICE_KEY,
+               'Content-Type': 'application/json'}
+
+    # send new user to user-service
+    try:
+        send_user_to_user_service(new_user, user_data, headers)
+    except requests.exceptions.ConnectionError as e:
+        print(e, flush=True)
+        return response.HttpResponse(status=408, reason="Cant connect to user-service")
+
+    # send new user to stats-service
+    try:
+        send_user_to_stats_service(new_user, user_data, headers)
+    except requests.exceptions.ConnectionError as e:
+        print(e, flush=True)
+        return response.HttpResponse(status=408, reason="Cant connect to stats-service")
+
+    # send new user to history-service
+    try:
+        send_user_to_history_service(new_user, user_data, headers)
+    except requests.exceptions.ConnectionError as e:
+        print(e, flush=True)
+        return response.HttpResponse(status=408, reason="Cant connect to history-service")
+    
     return response.HttpResponse()
 
 
