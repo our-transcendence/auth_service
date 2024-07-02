@@ -19,12 +19,12 @@ from ..utils import get_user_from_jwt
 from ..cookie import return_refresh_token
 import ourJWT.OUR_exception
 
-NO_OTP = 400, "No otp in request"
-NO_USER = 404, "No user found with given ID"
-ALREADY_2FA = 403, "2FA already enabled for the account"
-NO_SET_OTP = 412, "TOTP isn't enabled for given user"
-FAILED_DB = 503, "Database service failure"
-OTP_EXPECTING = 202, "Expecting otp"
+NO_OTP = b'', None, 400, "No otp in request"
+NO_USER = b'', None, 404, "No user found with given ID"
+ALREADY_2FA = b'', None, 403, "2FA already enabled for the account"
+NO_SET_OTP = b'', None, 412, "TOTP isn't enabled for given user"
+FAILED_DB = b'', None, 503, "Database service failure"
+OTP_EXPECTING = b'', None, 202, "Expecting otp"
 
 
 @csrf_exempt
@@ -48,7 +48,8 @@ def set_totp_endpoint(request: HttpRequest, **kwargs):
                             f"?secret={user.totp_key}"
                             "&issuer=OUR_Transcendence-auth"}
     need_otp_response = response.JsonResponse(response_content)
-    need_otp_response.status_code, need_otp_response.reason_phrase = OTP_EXPECTING
+    need_otp_response.status_code = OTP_EXPECTING[2]
+    need_otp_response.reason_phrase = OTP_EXPECTING[3]
     need_otp_response.set_cookie(key="otp_status",
                                  value="otp_enable",
                                  max_age=timedelta(seconds=120),
