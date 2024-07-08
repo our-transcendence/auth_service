@@ -27,7 +27,7 @@ FAILED_DB = b'', None, 503, "Database service failure"
 OTP_EXPECTING = b'', None, 202, "Expecting otp"
 
 
-@csrf_exempt
+
 @ourJWT.Decoder.check_auth()
 @require_http_methods(["PATCH"])
 def set_totp_endpoint(request: HttpRequest, **kwargs):
@@ -57,7 +57,7 @@ def set_totp_endpoint(request: HttpRequest, **kwargs):
     return need_otp_response
 
 
-@csrf_exempt
+
 @ourJWT.Decoder.check_auth()
 @require_http_methods(["PATCH"])
 def remove_totp_endpoint(request: HttpRequest, **kwargs):
@@ -79,7 +79,7 @@ def remove_totp_endpoint(request: HttpRequest, **kwargs):
     return need_otp_response
 
 
-@csrf_exempt
+
 @require_POST
 def otp_submit_endpoint(request: HttpRequest):
     reason = request.COOKIES.get("otp_status")

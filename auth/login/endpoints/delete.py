@@ -26,7 +26,7 @@ from .. import crypto
 
 NO_USER = 404, "No user found with given ID"
 
-@csrf_exempt
+
 def delete_endpoint(request: HttpRequest, user_id):
     authorisation = request.headers.get("Authorization")
     if authorisation is None or authorisation != crypto.SERVICE_KEY:

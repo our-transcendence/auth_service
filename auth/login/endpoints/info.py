@@ -12,7 +12,7 @@ from login.models import User
 from ..utils import get_user_from_jwt
 import ourJWT.OUR_exception
 
-@csrf_exempt
+
 @ourJWT.Decoder.check_auth()
 @require_GET
 def get_info(request: HttpRequest, **kwargs):
@@ -23,4 +23,3 @@ def get_info(request: HttpRequest, **kwargs):
     if user.login_42 is None:
         return response.JsonResponse({"totp": user.totp_enabled, "login_42_set": False})
     return response.JsonResponse({"totp": user.totp_enabled, "login_42_set": True, "login_42": user.login_42})
-    

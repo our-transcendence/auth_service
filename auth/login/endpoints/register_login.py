@@ -27,7 +27,6 @@ import ourJWT.OUR_exception
 # Create your views here.
 
 
-@csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_POST
 def register_endpoint(request: HttpRequest):
     try:
@@ -45,7 +44,7 @@ def register_endpoint(request: HttpRequest):
         "password": str(data["password"])
     }
 
-    # TODO check that pass word is a string
+
     if len(user_data["password"]) < 5:
         return response.HttpResponseBadRequest(reason="Invalid credential")
     if User.objects.filter(login=user_data["login"]).exists():
@@ -80,7 +79,6 @@ def register_endpoint(request: HttpRequest):
     return return_refresh_token(new_user)
 
 
-@csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def login_endpoint(request: HttpRequest):
     auth: str = request.headers.get("Authorization", None)
@@ -127,7 +125,6 @@ def login_endpoint(request: HttpRequest):
 
 
 # Can't use the decorator as the auth token may be expired
-@csrf_exempt  # TODO: DO NOT USE IN PRODUCTION
 @require_GET
 def refresh_auth_token(request: HttpRequest):
     try:

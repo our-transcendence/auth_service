@@ -24,7 +24,7 @@ def delete_auth_refresh_cookie():
     return no_cookie
 
 
-@csrf_exempt
+
 @ourJWT.Decoder.check_auth()
 @require_POST
 def logout_here(request: HttpRequest, **kwargs):
@@ -37,7 +37,7 @@ def logout_here(request: HttpRequest, **kwargs):
     return logout_response
 
 
-@csrf_exempt
+
 @ourJWT.Decoder.check_auth()
 @require_POST
 def logout_everywhere(request: HttpRequest, **kwargs):

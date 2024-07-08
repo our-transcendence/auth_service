@@ -19,7 +19,7 @@ from auth import settings
 
 import json
 
-@csrf_exempt
+
 @require_GET
 # return the url to contact when asking for a 42 auth
 def login_42_page(request: HttpRequest):
@@ -28,7 +28,7 @@ def login_42_page(request: HttpRequest):
     return response.JsonResponse({"redirect": settings.LOGIN_42_PAGE_URL})
 
 
-@csrf_exempt
+
 @require_POST
 def get_token_42(request: HttpRequest):
     try:
@@ -64,7 +64,7 @@ def get_token_42(request: HttpRequest):
     return full_response
 
 
-@csrf_exempt
+
 @require_GET
 def login_42_endpoint(request: HttpRequest):
     access_token = request.COOKIES.get("access_token")
@@ -82,7 +82,7 @@ def login_42_endpoint(request: HttpRequest):
     return return_refresh_token(user)
 
 
-@csrf_exempt
+
 @require_POST
 @ourJWT.Decoder.check_auth()
 def link_42(request: HttpRequest, **kwargs):
@@ -117,7 +117,7 @@ def link_42(request: HttpRequest, **kwargs):
 
     return response.HttpResponse(status=204, reason="42 account linked successfully")
 
-@csrf_exempt
+
 @require_POST
 @ourJWT.Decoder.check_auth()
 def unlink_42(request: HttpRequest, **kwargs):
