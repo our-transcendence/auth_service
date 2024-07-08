@@ -41,7 +41,7 @@ SECRET_KEY = 'django-insecure-bha_z48$lrtojju%5*y5y399k@f%c5!dnu80pbm7u)ccg$l_4y
 CSRF_COOKIE_HTTPONLY = True
 CSRF_COOKIE_SECURE = True
 CSRF_TRUSTED_ORIGINS = [
-    f'{os.getenv("HOST", "127.0.0.1"):4443}'
+    f'https://{os.getenv("HOST", "127.0.0.1"):4443}'
 ]
 urllib3.disable_warnings()  # TODO Remove in prod
 
