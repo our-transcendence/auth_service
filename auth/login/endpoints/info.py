@@ -4,7 +4,6 @@
 # Django imports
 from django.db import OperationalError, IntegrityError
 from django.http import response, HttpRequest, Http404
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_GET
 
 # Local application/library specific imports

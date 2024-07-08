@@ -7,7 +7,6 @@ import requests
 from django.db import IntegrityError, OperationalError
 from django.http import response, HttpRequest, Http404
 from django.shortcuts import get_object_or_404
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 
 # Local application/library specific imports

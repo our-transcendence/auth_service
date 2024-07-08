@@ -11,7 +11,6 @@ from django.db import OperationalError, IntegrityError, DataError
 from django.http import response, HttpRequest, Http404
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET
 # Third-party imports
 
