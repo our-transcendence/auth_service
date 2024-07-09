@@ -43,10 +43,10 @@ def send_user_to_user_service(user: User, user_data: dict, headers: dict):
 
 
 def send_user_to_stats_service(user: User, user_data: dict, headers: dict):
+    stat_service_data = {"display_name": user_data["display_name"]}
     try:
         stats_response = requests.post(f"{settings.STATS_SERVICE_URL}/stats/{user.id}/register",
-                                       # data=json.dumps(stats_request_data),
-                                        data=None,
+                                       data=json.dumps(stat_service_data),
                                        headers=headers,
                                        verify=False)
     except requests.exceptions.ConnectionError as e:
@@ -95,7 +95,7 @@ def send_new_user(new_user: User, user_data: dict):
     except requests.exceptions.ConnectionError as e:
         print(e, flush=True)
         return response.HttpResponse(status=408, reason="Cant connect to history-service")
-    
+
     return response.HttpResponse()
 
 
