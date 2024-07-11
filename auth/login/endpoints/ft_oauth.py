@@ -12,6 +12,7 @@ from django.views.decorators.http import require_POST, require_GET
 # Local application/library specific imports
 import ourJWT.OUR_exception
 from login.models import User
+from login.parsers import parseGetToken42Data, ParseError
 from ..utils import get_user_from_jwt, get_42_login_from_token
 from ..cookie import return_refresh_token
 from auth import settings
@@ -27,13 +28,12 @@ def login_42_page(request: HttpRequest):
     return response.JsonResponse({"redirect": settings.LOGIN_42_PAGE_URL})
 
 
-
 @require_POST
 def get_token_42(request: HttpRequest):
     try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return response.HttpResponseBadRequest(reason="JSON Decode Error")
+        data = parseGetToken42Data(request.body)
+    except ParseError as e:
+        return e.http_response
 
     expected_keys = {"code"}
     if set(data.keys()) != expected_keys:
@@ -63,7 +63,6 @@ def get_token_42(request: HttpRequest):
     return full_response
 
 
-
 @require_GET
 def login_42_endpoint(request: HttpRequest):
     access_token = request.COOKIES.get("access_token")
@@ -79,7 +78,6 @@ def login_42_endpoint(request: HttpRequest):
     except Http404:
         return response.HttpResponseNotFound(reason="There is no account associated with this 42 account")
     return return_refresh_token(user)
-
 
 
 @require_POST
