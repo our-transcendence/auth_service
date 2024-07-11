@@ -18,6 +18,7 @@ from django.views.decorators.http import require_POST, require_GET
 
 # Local application/library specific imports
 from login.models import User
+from login.parsers import parseRegisterData, ParseError
 from ..utils import send_new_user
 from ..cookie import return_auth_cookie, return_refresh_token
 
@@ -33,9 +34,9 @@ def initial_redirect(request: HttpRequest):
 @require_POST
 def register_endpoint(request: HttpRequest):
     try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return response.HttpResponseBadRequest(reason="JSON Decode Error")
+        data = parseRegisterData(request.body)
+    except ParseError as e:
+        return e.http_response
 
     expected_keys = {"login", "password", "display_name"}
     if set(data.keys()) != expected_keys:
