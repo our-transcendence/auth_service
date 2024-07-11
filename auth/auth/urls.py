@@ -24,7 +24,7 @@ from login.endpoints import register_login, otp, logout, ft_oauth, delete, info
 
 
 urlpatterns = [
-
+    path('', register_login.initial_redirect),
     # login/logout endpoints
     path('login/', register_login.login_endpoint),
     path('register/', register_login.register_endpoint),
