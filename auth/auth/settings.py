@@ -44,16 +44,7 @@ urllib3.disable_warnings()  # TODO Remove in prod
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    '82.64.223.220',
-    '127.0.0.1',
-    'localhost',
-    'auth-nginx',
-    'user-nginx',
-    'chat-nginx',
-    'history-nginx',
-    'stats-nginx',
-    'our-transcendence.games',
-    os.getenv("HOST", "127.0.0.1"),
+'*'
 ]
 
 CORS_ALLOW_CREDENTIALS = True
