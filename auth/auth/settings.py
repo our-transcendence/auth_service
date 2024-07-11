@@ -36,7 +36,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 APPEND_SLASH = False
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-bha_z48$lrtojju%5*y5y399k@f%c5!dnu80pbm7u)ccg$l_4y'
+SECRET_KEY = os.getenv("SECRET_KEY",'django-insecure-bha_z48$lrtojju%5*y5y399k@f%c5!dnu80pbm7u)ccg$l_4y')
 
 urllib3.disable_warnings()
 
