@@ -31,6 +31,7 @@ def return_auth_cookie(user: User, full_response: response.HttpResponse):
         user_dict["display_name"] = user.login
     payload = crypto.encoder.encode(user_dict, "auth")
     full_response.set_cookie(key="auth_token",
+                             max_age=duration,
                              value=payload,
                              secure=True,
                              httponly=True)
