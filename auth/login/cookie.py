@@ -14,8 +14,7 @@ from . import crypto
 # Third-party imports
 import requests
 
-duration = int(os.getenv("AUTH_LIFETIME", "10"))
-
+duration = timedelta(days=2)
 
 def return_auth_cookie(user: User, full_response: response.HttpResponse):
     user_dict = model_to_dict(user, exclude=["password",
@@ -44,6 +43,7 @@ def return_auth_cookie(user: User, full_response: response.HttpResponse):
 def return_refresh_token(user: User):
     full_response = response.HttpResponse()
     full_response.set_cookie(key='refresh_token',
+                             max_age=duration,
                              value=user.generate_refresh_token(),
                              secure=True,
                              httponly=True,
