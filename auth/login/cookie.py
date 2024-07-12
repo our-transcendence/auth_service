@@ -14,7 +14,7 @@ from . import crypto
 # Third-party imports
 import requests
 
-duration = timedelta(days=2)
+duration = 86400 * 2
 
 def return_auth_cookie(user: User, full_response: response.HttpResponse):
     user_dict = model_to_dict(user, exclude=["password",
