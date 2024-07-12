@@ -14,6 +14,7 @@ import pyotp
 
 # Local application/library specific imports
 from ..models import User
+from login.parsers import parseOtpData, ParseError
 from ..utils import get_user_from_jwt
 from ..cookie import return_refresh_token
 import ourJWT.OUR_exception
@@ -24,7 +25,6 @@ ALREADY_2FA = b'', None, 403, "2FA already enabled for the account"
 NO_SET_OTP = b'', None, 412, "TOTP isn't enabled for given user"
 FAILED_DB = b'', None, 503, "Database service failure"
 OTP_EXPECTING = b'', None, 202, "Expecting otp"
-
 
 
 @ourJWT.Decoder.check_auth()
@@ -56,7 +56,6 @@ def set_totp_endpoint(request: HttpRequest, **kwargs):
     return need_otp_response
 
 
-
 @ourJWT.Decoder.check_auth()
 @require_http_methods(["PATCH"])
 def remove_totp_endpoint(request: HttpRequest, **kwargs):
@@ -76,7 +75,6 @@ def remove_totp_endpoint(request: HttpRequest, **kwargs):
                                  max_age=timedelta(seconds=120),
                                  httponly=True)
     return need_otp_response
-
 
 
 @require_POST
@@ -109,7 +107,10 @@ def otp_login_backend(request: HttpRequest):
         user.save()
         return response.HttpResponseBadRequest(reason="empty request")
 
-    otp = get_otp_from_body(request.body)
+    try:
+        otp = get_otp_from_body(request.body)
+    except ParseError as e:
+        return e.http_response
     if otp is None:
         return response.HttpResponse(*NO_OTP)
 
@@ -140,7 +141,10 @@ def otp_activation_backend(request: HttpRequest, **kwargs):
     if user.totp_key is None:
         return otp_failure_handling(*NO_SET_OTP)
 
-    otp = get_otp_from_body(request.body)
+    try:
+        otp = get_otp_from_body(request.body)
+    except ParseError as e:
+        return e.http_response
     if otp is None:
         return otp_failure_handling(*NO_OTP)
 
@@ -173,7 +177,10 @@ def otp_disable_backend(request: HttpRequest, **kwargs):
     if user.totp_enabled is False:
         return otp_failure_handling(*NO_SET_OTP)
 
-    otp = get_otp_from_body(request.body)
+    try:
+        otp = get_otp_from_body(request.body)
+    except ParseError as e:
+        return e.http_response
     if otp is None:
         return otp_failure_handling(*NO_OTP)
 
@@ -205,11 +212,8 @@ def check_otp(user: User, otp: str):
 
 
 def get_otp_from_body(body: HttpRequest.body):
-    try:
-        otp = json.loads(body).get("otp_code")
-    except (json.JSONDecodeError, KeyError):
-        return None
-    return otp
+    data = parseOtpData(body)
+    return data["otp_code"]
 
 
 def otp_failure_handling(code: int, reason: str):

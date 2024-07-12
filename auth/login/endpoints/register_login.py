@@ -3,13 +3,14 @@ from datetime import timedelta
 import base64
 import binascii
 import json
+import os
 
 # Django imports
 from django.contrib.auth import hashers
 from django.core import exceptions
 from django.db import OperationalError, IntegrityError, DataError
 from django.http import response, HttpRequest, Http404
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.utils import timezone
 from django.views.decorators.http import require_POST, require_GET
 # Third-party imports
@@ -17,6 +18,7 @@ from django.views.decorators.http import require_POST, require_GET
 
 # Local application/library specific imports
 from login.models import User
+from login.parsers import parseRegisterData, ParseError
 from ..utils import send_new_user
 from ..cookie import return_auth_cookie, return_refresh_token
 
@@ -25,13 +27,16 @@ import ourJWT.OUR_exception
 
 # Create your views here.
 
+def initial_redirect(request: HttpRequest):
+    return redirect(f"https://{os.getenv('HOST')}:4443/home")
+
 
 @require_POST
 def register_endpoint(request: HttpRequest):
     try:
-        data = json.loads(request.body)
-    except json.JSONDecodeError:
-        return response.HttpResponseBadRequest(reason="JSON Decode Error")
+        data = parseRegisterData(request.body)
+    except ParseError as e:
+        return e.http_response
 
     expected_keys = {"login", "password", "display_name"}
     if set(data.keys()) != expected_keys:

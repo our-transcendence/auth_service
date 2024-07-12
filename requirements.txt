@@ -6,6 +6,7 @@ charset-normalizer==3.3.2
 cryptography==42.0.5
 Django==5.0.4
 django-cors-headers==4.3.1
+djecrety==1.0.17
 gunicorn==22.0.0
 idna==3.7
 ourJWT==0.1.3
